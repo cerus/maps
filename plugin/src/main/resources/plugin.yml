@@ -1,0 +1,5 @@
+name: ${artifactId}
+version: ${version}
+main: dev.cerus.maps.plugin.MapsPlugin
+author: Cerus
+api-version: 1.17

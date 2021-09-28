@@ -1,4 +1,4 @@
-<img width="20%" height="20%" align="left" src="https://cerus.dev/img/mc_map_item.png" alt="Minecraft map item">
+<img width="25%" height="25%" align="left" src="https://cerus.dev/img/mc_map_item.png" alt="Minecraft map item">
 
 <h2 align="center">maps</h2>
 <p align="center">maps is a simple Spigot plugin and api for creating clientside maps and map screens. It is the successor

@@ -1,6 +1,8 @@
 package dev.cerus.maps.api;
 
 import java.awt.Color;
+import java.util.Arrays;
+import java.util.Comparator;
 
 public enum MapColor {
 
@@ -283,6 +285,23 @@ public enum MapColor {
             }
         }
         return null;
+    }
+
+    public static Color mapColorToRgb(final byte color) {
+        final MapColor mapColor = fromId(color);
+        return mapColor == null ? TRANSPARENT_0.color : mapColor.color;
+    }
+
+    public static MapColor rgbToMapColor(final int r, final int g, final int b) {
+        return Arrays.stream(values())
+                .filter(mapPalette -> mapPalette.getId() > 3)
+                .min(Comparator.comparingDouble(value -> calcDist(value, r, g, b)))
+                .orElse(TRANSPARENT_0);
+    }
+
+    private static double calcDist(final MapColor mapColor, final int r, final int g, final int b) {
+        final Color color = mapColor.getColor();
+        return Math.sqrt(Math.pow(r - color.getRed(), 2) + Math.pow(g - color.getGreen(), 2) + Math.pow(b - color.getBlue(), 2));
     }
 
     public int getId() {

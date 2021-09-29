@@ -1,6 +1,9 @@
 ---
-name: Contribution request about: Template for contribution requests title: ''
-labels: enhancement assignees: ''
+name: Contribution request
+about: Template for contribution requests
+title: ''
+labels: enhancement
+assignees: ''
 
 ---
 

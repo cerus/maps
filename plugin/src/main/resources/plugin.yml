@@ -1,4 +1,4 @@
-name: ${artifactId}
+name: ${parent.artifactId}
 version: ${version}
 main: dev.cerus.maps.plugin.MapsPlugin
 author: Cerus

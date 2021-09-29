@@ -11,6 +11,7 @@
 
     <groupId>dev.cerus.maps</groupId>
     <artifactId>plugin</artifactId>
+    <version>1.0.1</version>
 
     <properties>
         <maven.compiler.target>16</maven.compiler.target>
@@ -65,6 +66,7 @@
     </dependencies>
 
     <build>
+        <finalName>${parent.artifactId}</finalName>
         <defaultGoal>clean package</defaultGoal>
         <plugins>
             <plugin>

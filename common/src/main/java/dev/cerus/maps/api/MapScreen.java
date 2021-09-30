@@ -79,6 +79,23 @@ public class MapScreen {
         }
     }
 
+    public void sendFramesOnly(final Player... players) {
+        if (this.frameIds == null) {
+            return;
+        }
+
+        for (int x = 0; x < this.width; x++) {
+            for (int y = 0; y < this.height; y++) {
+                final ClientsideMap map = this.mapArray[x][y];
+                final int frameId = this.frameIds[x][y];
+
+                for (final Player player : players) {
+                    this.versionAdapter.sendPacket(player, this.versionAdapter.makeFramePacket(frameId, map));
+                }
+            }
+        }
+    }
+
     public int getWidth() {
         return this.width;
     }

@@ -2,6 +2,7 @@ package dev.cerus.maps.plugin.command;
 
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
+import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Dependency;
 import co.aikar.commands.annotation.Subcommand;
 import dev.cerus.maps.api.MapColor;
@@ -18,12 +19,14 @@ import org.bukkit.entity.Player;
 import org.bukkit.map.MinecraftFont;
 
 @CommandAlias("maps")
+@CommandPermission("maps.command")
 public class MapsCommand extends BaseCommand {
 
     @Dependency
     private VersionAdapter versionAdapter;
 
     @Subcommand("createscreen")
+    @CommandPermission("maps.command.createscreen")
     public void handleCreateScreen(final Player player) {
         final ItemFrame startingFrame = player.getNearbyEntities(10, 10, 10).stream()
                 .filter(entity -> entity instanceof ItemFrame)
@@ -52,6 +55,7 @@ public class MapsCommand extends BaseCommand {
     }
 
     @Subcommand("testscreen")
+    @CommandPermission("maps.command.testscreen")
     public void handleTestScreen(final Player player, final int id) {
         final MapScreen mapScreen = MapScreenRegistry.getScreen(id);
         if (mapScreen == null) {
@@ -74,12 +78,14 @@ public class MapsCommand extends BaseCommand {
     }
 
     @Subcommand("removescreen")
+    @CommandPermission("maps.command.removescreen")
     public void handleRemoveScreen(final Player player, final int id) {
         MapScreenRegistry.removeScreen(id);
         player.sendMessage("§aScreen was removed");
     }
 
     @Subcommand("listscreens")
+    @CommandPermission("maps.command.listscreens")
     public void handleListScreens(final Player player) {
         final Collection<Integer> screenIds = MapScreenRegistry.getScreenIds();
         player.sendMessage("§6There are " + screenIds.size() + " map screens on this server");
@@ -87,6 +93,7 @@ public class MapsCommand extends BaseCommand {
     }
 
     @Subcommand("togglealgo")
+    @CommandPermission("maps.command.togglealgo")
     public void handleToggleAlgo(final Player player, final int id) {
         final MapScreen screen = MapScreenRegistry.getScreen(id);
         if (screen == null) {
@@ -105,6 +112,7 @@ public class MapsCommand extends BaseCommand {
     }
 
     @Subcommand("info")
+    @CommandPermission("maps.command.info")
     public void handleInfo(final Player player, final int id) {
         final MapScreen screen = MapScreenRegistry.getScreen(id);
         if (screen == null) {

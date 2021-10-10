@@ -5,13 +5,13 @@
     <parent>
         <artifactId>maps</artifactId>
         <groupId>dev.cerus</groupId>
-        <version>1.0.2</version>
+        <version>1.0.3</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>dev.cerus.maps</groupId>
     <artifactId>common</artifactId>
-    <version>1.0.2</version>
+    <version>1.0.3</version>
 
     <properties>
         <maven.compiler.target>16</maven.compiler.target>

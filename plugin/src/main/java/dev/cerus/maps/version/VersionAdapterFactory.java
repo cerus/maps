@@ -9,14 +9,11 @@ public class VersionAdapterFactory {
         String version = Bukkit.getVersion();
         version = version.substring(version.indexOf("MC: ") + 4, version.lastIndexOf(')'));
 
-        switch (version) {
-            case "1.17":
-            case "1.17.0":
-            case "1.17.1":
-                return new VersionAdapter17R1();
-            default:
-                return null;
-        }
+        return switch (version) {
+            case "1.17", "1.17.0", "1.17.1" -> new VersionAdapter17R1();
+            case "1.18" -> new VersionAdapter18R1();
+            default -> null;
+        };
     }
 
 }

@@ -52,7 +52,7 @@ public class MapScreen {
         for (int x = 0; x < this.width; x++) {
             for (int y = 0; y < this.height; y++) {
                 final ClientsideMap map = this.mapArray[x][y];
-                if (policy != DirtyHandlingPolicy.IGNORE && this.previousData != null) {
+                if (policy == DirtyHandlingPolicy.IGNORE && this.previousData != null) {
                     if (Arrays.equals(map.getGraphics().getData(), this.previousData[x][y])) {
                         continue;
                     }

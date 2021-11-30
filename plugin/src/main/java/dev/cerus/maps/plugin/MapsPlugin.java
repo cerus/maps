@@ -18,7 +18,7 @@ public class MapsPlugin extends JavaPlugin {
             final Logger logger = this.getLogger();
             logger.severe("Invalid server version");
             logger.severe("This plugin is not compatible with this server version.");
-            logger.severe("\"maps\" is compatible with 1.17 - 1.17.1");
+            logger.severe("\"maps\" is compatible with 1.17 - 1.18");
 
             this.getPluginLoader().disablePlugin(this);
             return;

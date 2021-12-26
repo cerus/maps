@@ -7,7 +7,7 @@
     <groupId>dev.cerus</groupId>
     <artifactId>maps</artifactId>
     <packaging>pom</packaging>
-    <version>1.0.4</version>
+    <version>1.0.5</version>
     <modules>
         <module>common</module>
         <module>bukkit-17_R1</module>

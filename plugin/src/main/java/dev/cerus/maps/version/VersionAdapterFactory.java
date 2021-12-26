@@ -11,7 +11,7 @@ public class VersionAdapterFactory {
 
         return switch (version) {
             case "1.17", "1.17.0", "1.17.1" -> new VersionAdapter17R1();
-            case "1.18" -> new VersionAdapter18R1();
+            case "1.18", "1.18.1" -> new VersionAdapter18R1();
             default -> null;
         };
     }

@@ -5,13 +5,13 @@
     <parent>
         <artifactId>maps</artifactId>
         <groupId>dev.cerus</groupId>
-        <version>1.0.5</version>
+        <version>1.0.6</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>dev.cerus.maps</groupId>
     <artifactId>bukkit-18_R1</artifactId>
-    <version>1.0.5</version>
+    <version>1.0.6</version>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -22,7 +22,7 @@
         <dependency>
             <groupId>dev.cerus.maps</groupId>
             <artifactId>common</artifactId>
-            <version>1.0.5</version>
+            <version>1.0.6</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

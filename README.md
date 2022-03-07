@@ -25,7 +25,8 @@ of <a href="https://github.com/cerus/packet-maps">packet-maps</a>.</p>
 • Clientside maps\
 • Map screens (arrangement of clientside maps)\
 • Simple and reasonably lightweight\
-• Easy to use developer api
+• Easy to use developer api\
+• Supports 1.16.5, 1.17.1, 1.18.1 and 1.18.2
 
 **What is the point of the plugin module?**\
 See [FAQ](#FAQ)
@@ -115,7 +116,7 @@ public class MyPlugin extends JavaPlugin {
 
 ### Building
 
-Requirements: Java 16, Git, Maven, Craftbukkit 1.17.1 installed in local Maven repo
+Requirements: Java 16, Git, Maven, Craftbukkit 1.16.5, 1.17.1, 1.18.1 and 1.18.2 installed in local Maven repo
 
 Simply clone the repository, navigate into the directory and run `mvn clean package`. The plugin will be in `plugin/target` and the api
 in `common/target`.

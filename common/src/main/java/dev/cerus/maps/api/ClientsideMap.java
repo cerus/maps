@@ -5,7 +5,6 @@ import dev.cerus.maps.api.version.VersionAdapter;
 import java.util.ArrayList;
 import java.util.List;
 import org.bukkit.entity.Player;
-import org.bukkit.map.MapCursor;
 
 public class ClientsideMap {
 
@@ -14,11 +13,12 @@ public class ClientsideMap {
 
     private final int id;
     private final byte[] data;
-    private final List<MapCursor> cursors;
+    private final List<Marker> markers;
     private int x;
     private int y;
     private int width;
     private int height;
+    private boolean dirtyMarkers;
 
     public ClientsideMap() {
         this(COUNTER++);
@@ -27,7 +27,7 @@ public class ClientsideMap {
     public ClientsideMap(final int id) {
         this.id = id;
         this.data = new byte[WIDTH * WIDTH];
-        this.cursors = new ArrayList<>();
+        this.markers = new ArrayList<>();
     }
 
     public void sendTo(final VersionAdapter versionAdapter, final Player player) {
@@ -42,16 +42,22 @@ public class ClientsideMap {
         graphics.draw(this, null);
     }
 
-    public void addCursor(final MapCursor cursor) {
-        this.cursors.add(cursor);
+    public void addMarker(final Marker marker) {
+        this.markers.add(marker);
+        this.dirtyMarkers = true;
     }
 
-    public void removeCursor(final MapCursor cursor) {
-        this.cursors.remove(cursor);
+    public void removeMarker(final Marker marker) {
+        if (this.markers.remove(marker)) {
+            this.dirtyMarkers = true;
+        }
     }
 
-    public void clearCursors() {
-        this.cursors.clear();
+    public void clearMarkers() {
+        if (!this.markers.isEmpty()) {
+            this.markers.clear();
+            this.dirtyMarkers = true;
+        }
     }
 
     public int getId() {
@@ -94,8 +100,16 @@ public class ClientsideMap {
         this.height = height;
     }
 
-    public List<MapCursor> getCursors() {
-        return List.copyOf(this.cursors);
+    public List<Marker> getMarkers() {
+        return List.copyOf(this.markers);
+    }
+
+    public boolean hasDirtyMarkers() {
+        return this.dirtyMarkers;
+    }
+
+    public void setDirtyMarkers(final boolean dirtyMarkers) {
+        this.dirtyMarkers = dirtyMarkers;
     }
 
 }

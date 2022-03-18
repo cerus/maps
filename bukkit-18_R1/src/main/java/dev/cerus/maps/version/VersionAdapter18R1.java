@@ -5,7 +5,7 @@ import dev.cerus.maps.api.version.VersionAdapter;
 import dev.cerus.maps.util.ReflectionUtil;
 import java.util.Collections;
 import java.util.stream.Collectors;
-import net.minecraft.network.chat.ChatComponentText;
+import net.minecraft.network.chat.IChatBaseComponent;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.PacketPlayOutEntityMetadata;
 import net.minecraft.network.protocol.game.PacketPlayOutMap;
@@ -29,13 +29,13 @@ public class VersionAdapter18R1 implements VersionAdapter {
                 map.getId(),
                 (byte) 0,
                 true,
-                map.getCursors().stream()
+                map.getMarkers().stream()
                         .map(cursor -> new MapIcon(
-                                MapIcon.Type.a(cursor.getType().getValue()),
-                                cursor.getX(),
-                                cursor.getY(),
+                                MapIcon.Type.a(cursor.getType()),
+                                cursor.getCompressedX(),
+                                cursor.getCompressedY(),
                                 cursor.getDirection(),
-                                new ChatComponentText(cursor.getCaption())
+                                IChatBaseComponent.ChatSerializer.a(cursor.getCaptionString())
                         ))
                         .collect(Collectors.toList()),
                 new WorldMap.b(

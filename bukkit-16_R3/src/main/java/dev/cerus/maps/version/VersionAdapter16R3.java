@@ -9,10 +9,10 @@ import io.netty.channel.ChannelPromise;
 import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.stream.Collectors;
-import net.minecraft.server.v1_16_R3.ChatComponentText;
 import net.minecraft.server.v1_16_R3.DataWatcher;
 import net.minecraft.server.v1_16_R3.DataWatcherObject;
 import net.minecraft.server.v1_16_R3.DataWatcherRegistry;
+import net.minecraft.server.v1_16_R3.IChatBaseComponent;
 import net.minecraft.server.v1_16_R3.ItemStack;
 import net.minecraft.server.v1_16_R3.MapIcon;
 import net.minecraft.server.v1_16_R3.Packet;
@@ -32,13 +32,13 @@ public class VersionAdapter16R3 implements VersionAdapter {
                 (byte) 0,
                 true,
                 false,
-                map.getCursors().stream()
+                map.getMarkers().stream()
                         .map(cursor -> new MapIcon(
-                                MapIcon.Type.a(cursor.getType().getValue()),
-                                cursor.getX(),
-                                cursor.getY(),
+                                MapIcon.Type.a(cursor.getType()),
+                                cursor.getCompressedX(),
+                                cursor.getCompressedY(),
                                 cursor.getDirection(),
-                                new ChatComponentText(cursor.getCaption())
+                                IChatBaseComponent.ChatSerializer.a(cursor.getCaptionString())
                         ))
                         .collect(Collectors.toList()),
                 map.getData(),

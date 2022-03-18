@@ -2,9 +2,8 @@ package dev.cerus.maps.api;
 
 import dev.cerus.maps.api.graphics.MapScreenGraphics;
 import dev.cerus.maps.api.version.VersionAdapter;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -38,6 +37,30 @@ public class MapScreen {
         this.height = h;
     }
 
+    public void addMarker(final Marker marker) {
+        final int arrX = marker.getX() / 128;
+        final int arrY = marker.getY() / 128;
+        if (arrX < this.width && arrY < this.height) {
+            this.mapArray[arrX][arrY].addMarker(marker);
+        }
+    }
+
+    public void removeMarker(final Marker marker) {
+        final int arrX = marker.getX() / 128;
+        final int arrY = marker.getY() / 128;
+        if (arrX < this.width && arrY < this.height) {
+            this.mapArray[arrX][arrY].addMarker(marker);
+        }
+    }
+
+    public void clearMarkers() {
+        for (final ClientsideMap[] array : this.mapArray) {
+            for (final ClientsideMap clientsideMap : array) {
+                clientsideMap.clearMarkers();
+            }
+        }
+    }
+
     public void sendMaps(final boolean full) {
         this.sendMaps(full, Bukkit.getOnlinePlayers());
     }
@@ -52,16 +75,16 @@ public class MapScreen {
         for (int x = 0; x < this.width; x++) {
             for (int y = 0; y < this.height; y++) {
                 final ClientsideMap map = this.mapArray[x][y];
-                if (!full && map.getX() == 0 && map.getY() == 0 && map.getWidth() == 0 && map.getHeight() == 0) {
+                if (!full && map.getX() == 0 && map.getY() == 0 && map.getWidth() == 0
+                        && map.getHeight() == 0 && !map.hasDirtyMarkers()) {
                     continue;
                 }
 
-                final Set<Object> packets = new HashSet<>();
-                packets.add(this.versionAdapter.makeMapPacket(full, map));
-
+                final Object packet = this.versionAdapter.makeMapPacket(full, map);
                 for (final Player player : players) {
-                    packets.forEach(o -> this.versionAdapter.sendPacket(player, o));
+                    this.versionAdapter.sendPacket(player, packet);
                 }
+                map.setDirtyMarkers(false);
             }
         }
     }
@@ -101,6 +124,13 @@ public class MapScreen {
 
     public void setFrameIds(final int[][] frameIds) {
         this.frameIds = frameIds;
+    }
+
+    public Collection<Marker> getMarkers() {
+        return Arrays.stream(this.mapArray)
+                .flatMap(Arrays::stream)
+                .flatMap(clientsideMap -> clientsideMap.getMarkers().stream())
+                .toList();
     }
 
 }

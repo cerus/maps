@@ -7,6 +7,7 @@ import co.aikar.commands.annotation.Dependency;
 import co.aikar.commands.annotation.Subcommand;
 import dev.cerus.maps.api.MapColor;
 import dev.cerus.maps.api.MapScreen;
+import dev.cerus.maps.api.Marker;
 import dev.cerus.maps.api.graphics.MapScreenGraphics;
 import dev.cerus.maps.api.version.VersionAdapter;
 import dev.cerus.maps.plugin.map.MapScreenRegistry;
@@ -15,8 +16,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.concurrent.ThreadLocalRandom;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.Player;
+import org.bukkit.map.MapCursor;
 import org.bukkit.map.MinecraftFont;
 
 @CommandAlias("maps")
@@ -74,6 +77,17 @@ public class MapsCommand extends BaseCommand {
         final int width = MinecraftFont.Font.getWidth(text) * 3;
         final int height = MinecraftFont.Font.getHeight() * 3;
         graphics.drawText((mapScreen.getWidth() * 128 / 2) - (width / 2), (mapScreen.getHeight() * 128 / 2) - (height / 2), text, (byte) MapColor.GRAY_3.getId(), 3);
+
+        if (mapScreen.getMarkers().isEmpty()) {
+            mapScreen.addMarker(new Marker(
+                    16,
+                    16,
+                    (byte) 1,
+                    MapCursor.Type.MANSION,
+                    true,
+                    new TextComponent("affe")
+            ));
+        }
 
         mapScreen.sendFrames(player);
         mapScreen.sendMaps(false, player);

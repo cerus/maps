@@ -4,6 +4,8 @@ import dev.cerus.maps.api.ClientsideMap;
 import dev.cerus.maps.api.version.VersionAdapter;
 import dev.cerus.maps.util.ReflectionUtil;
 import java.util.Collections;
+import java.util.stream.Collectors;
+import net.minecraft.network.chat.ChatComponentText;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.PacketPlayOutEntityMetadata;
 import net.minecraft.network.protocol.game.PacketPlayOutMap;
@@ -11,6 +13,7 @@ import net.minecraft.network.syncher.DataWatcher;
 import net.minecraft.network.syncher.DataWatcherObject;
 import net.minecraft.network.syncher.DataWatcherRegistry;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.saveddata.maps.MapIcon;
 import net.minecraft.world.level.saveddata.maps.WorldMap;
 import org.bukkit.Material;
 import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer;
@@ -21,16 +24,28 @@ import org.bukkit.inventory.meta.MapMeta;
 public class VersionAdapter17R1 implements VersionAdapter {
 
     @Override
-    public Object makeMapPacket(final ClientsideMap map) {
-        return new PacketPlayOutMap(map.getId(),
+    public Object makeMapPacket(final boolean ignoreBounds, final ClientsideMap map) {
+        return new PacketPlayOutMap(
+                map.getId(),
                 (byte) 0,
                 true,
-                Collections.emptyList(),
-                new WorldMap.b(0,
-                        0,
-                        128,
-                        128,
-                        map.getGraphics().getData()));
+                map.getCursors().stream()
+                        .map(cursor -> new MapIcon(
+                                MapIcon.Type.a(cursor.getType().getValue()),
+                                cursor.getX(),
+                                cursor.getY(),
+                                cursor.getDirection(),
+                                new ChatComponentText(cursor.getCaption())
+                        ))
+                        .collect(Collectors.toList()),
+                new WorldMap.b(
+                        ignoreBounds ? 0 : map.getX(),
+                        ignoreBounds ? 0 : map.getY(),
+                        ignoreBounds ? 128 : map.getWidth(),
+                        ignoreBounds ? 128 : map.getHeight(),
+                        map.getData()
+                )
+        );
     }
 
     @Override

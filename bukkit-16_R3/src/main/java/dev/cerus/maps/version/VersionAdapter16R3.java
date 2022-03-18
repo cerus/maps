@@ -3,11 +3,18 @@ package dev.cerus.maps.version;
 import dev.cerus.maps.api.ClientsideMap;
 import dev.cerus.maps.api.version.VersionAdapter;
 import dev.cerus.maps.util.ReflectionUtil;
+import io.netty.channel.ChannelDuplexHandler;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelPromise;
+import java.lang.reflect.Field;
 import java.util.Collections;
+import java.util.stream.Collectors;
+import net.minecraft.server.v1_16_R3.ChatComponentText;
 import net.minecraft.server.v1_16_R3.DataWatcher;
 import net.minecraft.server.v1_16_R3.DataWatcherObject;
 import net.minecraft.server.v1_16_R3.DataWatcherRegistry;
 import net.minecraft.server.v1_16_R3.ItemStack;
+import net.minecraft.server.v1_16_R3.MapIcon;
 import net.minecraft.server.v1_16_R3.Packet;
 import net.minecraft.server.v1_16_R3.PacketPlayOutEntityMetadata;
 import net.minecraft.server.v1_16_R3.PacketPlayOutMap;
@@ -20,17 +27,25 @@ import org.bukkit.inventory.meta.MapMeta;
 public class VersionAdapter16R3 implements VersionAdapter {
 
     @Override
-    public Object makeMapPacket(final ClientsideMap map) {
+    public Object makeMapPacket(final boolean ignoreBounds, final ClientsideMap map) {
         return new PacketPlayOutMap(map.getId(),
                 (byte) 0,
                 true,
                 false,
-                Collections.emptyList(),
-                map.getGraphics().getData(),
-                0,
-                0,
-                128,
-                128
+                map.getCursors().stream()
+                        .map(cursor -> new MapIcon(
+                                MapIcon.Type.a(cursor.getType().getValue()),
+                                cursor.getX(),
+                                cursor.getY(),
+                                cursor.getDirection(),
+                                new ChatComponentText(cursor.getCaption())
+                        ))
+                        .collect(Collectors.toList()),
+                map.getData(),
+                ignoreBounds ? 0 : map.getX(),
+                ignoreBounds ? 0 : map.getY(),
+                ignoreBounds ? 128 : map.getWidth(),
+                ignoreBounds ? 128 : map.getHeight()
         );
     }
 
@@ -56,6 +71,38 @@ public class VersionAdapter16R3 implements VersionAdapter {
     @Override
     public void sendPacket(final Player player, final Object packet) {
         ((CraftPlayer) player).getHandle().playerConnection.sendPacket((Packet<?>) packet);
+    }
+
+    @Override
+    public void inject(final Player player) {
+        ((CraftPlayer) player).getHandle().playerConnection.networkManager.channel.pipeline()
+                .addBefore("packet_handler", "maps_inject", new ChannelDuplexHandler() {
+                    @Override
+                    public void write(final ChannelHandlerContext ctx, final Object msg, final ChannelPromise promise) throws Exception {
+                        if (msg instanceof PacketPlayOutMap map) {
+                            try {
+                                Field f = map.getClass().getDeclaredField("a");
+                                f.setAccessible(true);
+                                player.sendMessage("MAP: " + f.get(map).toString());
+                                f = map.getClass().getDeclaredField("f");
+                                f.setAccessible(true);
+                                player.sendMessage("X: " + f.get(map).toString());
+                                f = map.getClass().getDeclaredField("g");
+                                f.setAccessible(true);
+                                player.sendMessage("Y: " + f.get(map).toString());
+                                f = map.getClass().getDeclaredField("h");
+                                f.setAccessible(true);
+                                player.sendMessage("W: " + f.get(map).toString());
+                                f = map.getClass().getDeclaredField("i");
+                                f.setAccessible(true);
+                                player.sendMessage("H: " + f.get(map).toString());
+                            } catch (final Exception e) {
+                                player.sendMessage("Inject failure: " + e.getMessage());
+                            }
+                        }
+                        super.write(ctx, msg, promise);
+                    }
+                });
     }
 
 }

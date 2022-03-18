@@ -3,13 +3,12 @@
          xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>maps</artifactId>
-        <groupId>dev.cerus</groupId>
-        <version>1.0.7</version>
+        <artifactId>parent</artifactId>
+        <groupId>dev.cerus.maps</groupId>
+        <version>2.0.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>dev.cerus.maps</groupId>
     <artifactId>plugin</artifactId>
     <version>${parent.version}</version>
 
@@ -41,7 +40,7 @@
         <dependency>
             <groupId>org.spigotmc</groupId>
             <artifactId>spigot-api</artifactId>
-            <version>1.17.1-R0.1-SNAPSHOT</version>
+            <version>1.16.5-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -84,7 +83,7 @@
     </dependencies>
 
     <build>
-        <finalName>${parent.artifactId}</finalName>
+        <finalName>maps</finalName>
         <defaultGoal>clean package</defaultGoal>
         <plugins>
             <plugin>

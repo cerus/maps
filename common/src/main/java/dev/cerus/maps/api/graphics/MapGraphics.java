@@ -4,7 +4,7 @@ import dev.cerus.maps.util.Vec2;
 import org.bukkit.map.MapFont;
 import org.bukkit.map.MinecraftFont;
 
-public abstract class MapGraphics {
+public abstract class MapGraphics<T, P> {
 
     public abstract void fill(byte color);
 
@@ -50,7 +50,7 @@ public abstract class MapGraphics {
     public void drawLine(final Vec2 v1, final Vec2 v2, final byte color) {
         final Vec2[] arr = this.lerpVecArr(v1, v2);
         for (final Vec2 p : arr) {
-            this.setPixel(p.x, p.z, color);
+            this.setPixel(p.x, p.y, color);
         }
     }
 
@@ -67,7 +67,7 @@ public abstract class MapGraphics {
     }
 
     private Vec2 lerpVec(final Vec2 start, final Vec2 end, final float t) {
-        return new Vec2((int) this.lerp(start.x, end.x, t), (int) this.lerp(start.z, end.z, t));
+        return new Vec2(this.round(this.lerp(start.x, end.x, t)), this.round(this.lerp(start.y, end.y, t)));
     }
 
     private float lerp(final int start, final int end, final float t) {
@@ -75,10 +75,16 @@ public abstract class MapGraphics {
     }
 
     private int dist(final Vec2 v1, final Vec2 v2) {
-        return (int) (Math.pow(v1.x - v2.x, 2) + Math.pow(v1.z - v2.z, 2));
+        return (int) (Math.pow(v1.x - v2.x, 2) + Math.pow(v1.y - v2.y, 2));
     }
 
-    public void drawText(int x, int z, final String text, final byte startColor, final int size) {
+    private int round(final float f) {
+        final int i = (int) f;
+        final float rem = f - i;
+        return rem < 0.5f ? i : i + 1;
+    }
+
+    public void drawText(int x, int y, final String text, final byte startColor, final int size) {
         final MapFont font = MinecraftFont.Font;
 
         final int xStart = x;
@@ -97,7 +103,7 @@ public abstract class MapGraphics {
                 if (ch == '\n') {
                     // Increment z if the char is a line separator
                     x = xStart;
-                    z += font.getHeight() + 1;
+                    y += font.getHeight() + 1;
                 } else if (ch == '\u00A7' /*-> §*/) {
                     // Get distance from current char to end char (';')
                     final int end = text.indexOf(';', currentIndex);
@@ -120,8 +126,8 @@ public abstract class MapGraphics {
                         for (int col = 0; col < sprite.getWidth(); ++col) {
                             if (sprite.get(row, col)) {
                                 for (int eX = 0; eX < size; eX++) {
-                                    for (int eZ = 0; eZ < size; eZ++) {
-                                        this.setPixel(x + (size * col) + (eX), z + (size * row) + (eZ), color);
+                                    for (int eY = 0; eY < size; eY++) {
+                                        this.setPixel(x + (size * col) + (eX), y + (size * row) + (eY), color);
                                     }
                                 }
                             }
@@ -140,5 +146,7 @@ public abstract class MapGraphics {
     }
 
     public abstract byte setPixel(int x, int y, byte color);
+
+    public abstract void draw(T t, P params);
 
 }

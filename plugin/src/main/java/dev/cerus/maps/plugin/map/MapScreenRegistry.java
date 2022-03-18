@@ -59,7 +59,6 @@ public class MapScreenRegistry {
             section.set("width", screen.getWidth());
             section.set("height", screen.getHeight());
             section.set("world", world.getUID().toString());
-            section.set("advanced-algo", screen.isAdvancedContentChangeAlgorithmEnabled());
 
             final ConfigurationSection framesSection = section.createSection("frames");
             for (int x = 0; x < screen.getWidth(); x++) {
@@ -120,9 +119,6 @@ public class MapScreenRegistry {
             mapScreen.setFrameIds(frameIds);
             if (id > highestId) {
                 highestId = id;
-            }
-            if (section.getBoolean("advanced-algo")) {
-                mapScreen.enableAdvancedContentChangeAlgorithm();
             }
             screenMap.put(id, mapScreen);
         }

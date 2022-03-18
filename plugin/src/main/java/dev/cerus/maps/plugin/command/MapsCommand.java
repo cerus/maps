@@ -14,6 +14,7 @@ import dev.cerus.maps.util.EntityUtil;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.concurrent.ThreadLocalRandom;
 import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.Player;
 import org.bukkit.map.MinecraftFont;
@@ -66,15 +67,16 @@ public class MapsCommand extends BaseCommand {
         final MapScreenGraphics graphics = mapScreen.getGraphics();
         graphics.fill((byte) MapColor.WHITE_2.getId());
         graphics.drawRect(0, 0, mapScreen.getWidth() * 128 - 1, mapScreen.getHeight() * 128 - 1, (byte) MapColor.BLACK_2.getId());
-        graphics.drawLine(0, 0, mapScreen.getWidth() * 128, mapScreen.getHeight() * 128, (byte) MapColor.BLACK_2.getId());
-        graphics.drawLine(0, mapScreen.getHeight() * 128, mapScreen.getWidth() * 128, 0, (byte) MapColor.BLACK_2.getId());
+        graphics.drawLine(1, 1, mapScreen.getWidth() * 128 - 2, mapScreen.getHeight() * 128 - 2, (byte) MapColor.BLACK_2.getId());
+        graphics.drawLine(1, mapScreen.getHeight() * 128 - 2, mapScreen.getWidth() * 128 - 2, 1, (byte) MapColor.BLACK_2.getId());
 
-        final String text = "#" + id;
+        final String text = "#" + id + " - " + ThreadLocalRandom.current().nextInt(256);
         final int width = MinecraftFont.Font.getWidth(text) * 3;
         final int height = MinecraftFont.Font.getHeight() * 3;
         graphics.drawText((mapScreen.getWidth() * 128 / 2) - (width / 2), (mapScreen.getHeight() * 128 / 2) - (height / 2), text, (byte) MapColor.GRAY_3.getId(), 3);
 
-        mapScreen.update(MapScreen.DirtyHandlingPolicy.IGNORE, player);
+        mapScreen.sendFrames(player);
+        mapScreen.sendMaps(false, player);
     }
 
     @Subcommand("removescreen")
@@ -92,25 +94,6 @@ public class MapsCommand extends BaseCommand {
         player.sendMessage("§e" + Arrays.toString(screenIds.toArray(new Integer[0])));
     }
 
-    @Subcommand("togglealgo")
-    @CommandPermission("maps.command.togglealgo")
-    public void handleToggleAlgo(final Player player, final int id) {
-        final MapScreen screen = MapScreenRegistry.getScreen(id);
-        if (screen == null) {
-            player.sendMessage("§cScreen not found");
-            return;
-        }
-
-        if (screen.isAdvancedContentChangeAlgorithmEnabled()) {
-            screen.disableAdvancedContentChangeAlgorithm();
-            player.sendMessage("§eAdvanced content change algorithm has been disabled for screen #" + id + ".");
-        } else {
-            screen.enableAdvancedContentChangeAlgorithm();
-            player.sendMessage("§aAdvanced content change algorithm has been enabled for screen #" + id + ".");
-            player.sendMessage("§cWarning: §7Map screens with the algorithm enabled will use double the memory.");
-        }
-    }
-
     @Subcommand("info")
     @CommandPermission("maps.command.info")
     public void handleInfo(final Player player, final int id) {
@@ -121,8 +104,12 @@ public class MapsCommand extends BaseCommand {
         }
 
         player.sendMessage("§7Screen §b#" + id + " §7(" + screen.getWidth() + "x" + screen.getHeight() + ")");
-        player.sendMessage("§7Advanced content change algorithm is "
-                + (screen.isAdvancedContentChangeAlgorithmEnabled() ? "§aenabled" : "§cdisabled"));
+    }
+
+    @Subcommand("inject")
+    @CommandPermission("maps.command.inject")
+    public void handleInject(final Player player, final int id) {
+        this.versionAdapter.inject(player);
     }
 
 }

@@ -28,17 +28,19 @@ public class VersionAdapter16R3 implements VersionAdapter {
 
     @Override
     public Object makeMapPacket(final boolean ignoreBounds, final ClientsideMap map) {
-        return new PacketPlayOutMap(map.getId(),
+        return new PacketPlayOutMap(
+                map.getId(),
                 (byte) 0,
                 true,
-                false,
+                true,
                 map.getMarkers().stream()
                         .map(cursor -> new MapIcon(
                                 MapIcon.Type.a(cursor.getType()),
                                 cursor.getCompressedX(),
                                 cursor.getCompressedY(),
                                 cursor.getDirection(),
-                                IChatBaseComponent.ChatSerializer.a(cursor.getCaptionString())
+                                !cursor.hasCaption() ? null
+                                        : IChatBaseComponent.ChatSerializer.a(cursor.getCaptionString())
                         ))
                         .collect(Collectors.toList()),
                 map.getData(),

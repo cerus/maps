@@ -12,6 +12,7 @@ public class Marker {
     private byte type;
     private boolean visible;
     private BaseComponent[] caption;
+    private ClientsideMap parent;
 
     public Marker(final int x, final int y, final byte direction, final byte type, final boolean visible) {
         this(x, y, direction, type, visible, new BaseComponent[0]);
@@ -44,6 +45,9 @@ public class Marker {
             throw new IllegalArgumentException("Type must be in the range 0-26");
         }
         this.type = type;
+        if (this.parent != null) {
+            this.parent.setDirtyMarkers(true);
+        }
     }
 
     public int getX() {
@@ -52,10 +56,13 @@ public class Marker {
 
     public void setX(final int x) {
         this.x = x;
+        if (this.parent != null) {
+            this.parent.setDirtyMarkers(true);
+        }
     }
 
     public byte getCompressedX() {
-        return (byte) ((this.x % 128) - 128);
+        return (byte) ((this.x % 256) - 128);
     }
 
     public int getY() {
@@ -64,10 +71,13 @@ public class Marker {
 
     public void setY(final int y) {
         this.y = y;
+        if (this.parent != null) {
+            this.parent.setDirtyMarkers(true);
+        }
     }
 
     public byte getCompressedY() {
-        return (byte) ((this.y % 128) - 128);
+        return (byte) ((this.y % 256) - 128);
     }
 
     public byte getDirection() {
@@ -79,6 +89,9 @@ public class Marker {
             throw new IllegalArgumentException("Direction must be in the range 0-15");
         }
         this.direction = direction;
+        if (this.parent != null) {
+            this.parent.setDirtyMarkers(true);
+        }
     }
 
     public byte getType() {
@@ -91,6 +104,9 @@ public class Marker {
 
     public void setType(final byte type) {
         this.type = type;
+        if (this.parent != null) {
+            this.parent.setDirtyMarkers(true);
+        }
     }
 
     public boolean isVisible() {
@@ -99,6 +115,13 @@ public class Marker {
 
     public void setVisible(final boolean visible) {
         this.visible = visible;
+        if (this.parent != null) {
+            this.parent.setDirtyMarkers(true);
+        }
+    }
+
+    public boolean hasCaption() {
+        return this.getCaption() != null && this.getCaption().length > 0;
     }
 
     public BaseComponent[] getCaption() {
@@ -107,10 +130,17 @@ public class Marker {
 
     public void setCaption(final BaseComponent[] caption) {
         this.caption = caption;
+        if (this.parent != null) {
+            this.parent.setDirtyMarkers(true);
+        }
     }
 
     public String getCaptionString() {
         return ComponentSerializer.toString(this.caption);
+    }
+
+    void setParent(final ClientsideMap parent) {
+        this.parent = parent;
     }
 
 }

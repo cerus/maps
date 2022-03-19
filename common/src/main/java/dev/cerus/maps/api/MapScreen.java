@@ -38,8 +38,10 @@ public class MapScreen {
     }
 
     public void addMarker(final Marker marker) {
-        final int arrX = marker.getX() / 128;
-        final int arrY = marker.getY() / 128;
+        final int arrX = marker.getX() / 256;
+        final int arrY = marker.getY() / 256;
+        System.out.println(marker.getX() + " > " + arrX + " > " + marker.getCompressedX() + ", "
+                + marker.getY() + " > " + arrY + " > " + marker.getCompressedY());
         if (arrX < this.width && arrY < this.height) {
             this.mapArray[arrX][arrY].addMarker(marker);
         }
@@ -70,7 +72,7 @@ public class MapScreen {
     }
 
     public void sendMaps(final boolean full, final Player... players) {
-        this.graphics.draw(this, this.mapArray);
+        this.graphics.renderOnto(this, this.mapArray);
 
         for (int x = 0; x < this.width; x++) {
             for (int y = 0; y < this.height; y++) {

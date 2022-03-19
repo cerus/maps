@@ -39,11 +39,12 @@ public class ClientsideMap {
     }
 
     public void draw(final MapGraphics<ClientsideMap, ?> graphics) {
-        graphics.draw(this, null);
+        graphics.renderOnto(this, null);
     }
 
     public void addMarker(final Marker marker) {
         this.markers.add(marker);
+        marker.setParent(this);
         this.dirtyMarkers = true;
     }
 

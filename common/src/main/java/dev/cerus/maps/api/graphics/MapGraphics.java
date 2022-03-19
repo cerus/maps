@@ -1,12 +1,74 @@
 package dev.cerus.maps.api.graphics;
 
+import dev.cerus.maps.api.MapColor;
+import dev.cerus.maps.api.graphics.filter.BoxBlurFilter;
+import dev.cerus.maps.api.graphics.filter.Filter;
 import dev.cerus.maps.util.Vec2;
+import java.awt.Color;
+import java.awt.image.BufferedImage;
 import org.bukkit.map.MapFont;
 import org.bukkit.map.MinecraftFont;
 
-public abstract class MapGraphics<T, P> {
+public abstract class MapGraphics<C, P> {
 
-    public abstract void fill(byte color);
+    public void place(final MapGraphics<?, ?> graphics, final int x, final int y) {
+        this.place(graphics, x, y, 1f);
+    }
+
+    public void place(final MapGraphics<?, ?> graphics, final int x, final int y, final float alpha) {
+        this.place(graphics, x, y, alpha, true);
+    }
+
+    public void place(final MapGraphics<?, ?> graphics, final int x, final int y, final float alpha, final boolean ignoreTransparent) {
+        for (int ox = 0; ox < graphics.getWidth(); ox++) {
+            for (int oy = 0; oy < graphics.getHeight(); oy++) {
+                if (ignoreTransparent && graphics.getPixel(ox, oy) >= 0 && graphics.getPixel(ox, oy) <= 3) {
+                    continue;
+                }
+                this.setPixel(x + ox, y + oy, alpha, graphics.getPixel(ox, oy));
+            }
+        }
+    }
+
+    public void boxBlur(final int x, final int y, final int width, final int height) {
+        this.boxBlur(1, x, y, width, height);
+    }
+
+    public void boxBlur(final BoxBlurFilter.TransparencyHandling transparencyHandling, final int x, final int y, final int width, final int height) {
+        this.boxBlur(1, transparencyHandling, x, y, width, height);
+    }
+
+    public void boxBlur(final int passes, final int x, final int y, final int width, final int height) {
+        this.boxBlur(passes, BoxBlurFilter.TransparencyHandling.IGNORE, x, y, width, height);
+    }
+
+    public void boxBlur(final int passes, final BoxBlurFilter.TransparencyHandling transparencyHandling, final int x, final int y, final int width, final int height) {
+        this.applyFilterToArea(
+                new BoxBlurFilter(passes, transparencyHandling),
+                x,
+                y,
+                width,
+                height
+        );
+    }
+
+    public void applyFilterToArea(final Filter filter, final int x, final int y, final int width, final int height) {
+        for (int unused = 0; unused < filter.passes(); unused++) {
+            for (int ax = 0; ax < width; ax++) {
+                for (int ay = 0; ay < height; ay++) {
+                    this.setPixel(ax + x, ay + y, filter.calculate(this, ax + x, ay + y, x, x + width, y, y + height));
+                }
+            }
+        }
+    }
+
+    public void fill(final byte color) {
+        for (int x = 0; x < this.getWidth(); x++) {
+            for (int y = 0; y < this.getHeight(); y++) {
+                this.setPixel(x, y, color);
+            }
+        }
+    }
 
     public void fillRect(final int x, final int y, final int w, final int h, final byte color) {
         for (int cx = x; cx < x + w; cx++) {
@@ -84,6 +146,17 @@ public abstract class MapGraphics<T, P> {
         return rem < 0.5f ? i : i + 1;
     }
 
+    public void drawImage(final BufferedImage img, final int x, final int y) {
+        for (int ix = 0; ix < img.getWidth(); ix++) {
+            for (int iy = 0; iy < img.getHeight(); iy++) {
+                final Color color = new Color(img.getRGB(ix, iy), img.getColorModel().hasAlpha());
+                final float alpha = img.getColorModel().hasAlpha() ? color.getAlpha() / 255f : 1f;
+                final byte mapColor = ColorCache.rgbToMap(color.getRed(), color.getGreen(), color.getBlue());
+                this.setPixel(x + ix, y + iy, alpha, mapColor);
+            }
+        }
+    }
+
     public void drawText(int x, int y, final String text, final byte startColor, final int size) {
         final MapFont font = MinecraftFont.Font;
 
@@ -145,8 +218,80 @@ public abstract class MapGraphics<T, P> {
         }
     }
 
-    public abstract byte setPixel(int x, int y, byte color);
+    public byte setPixel(final int x, final int y, final byte color) {
+        return this.setPixel(x, y, 1f, color);
+    }
 
-    public abstract void draw(T t, P params);
+    public abstract byte setPixel(int x, int y, float alpha, byte color);
+
+    public abstract byte getPixel(final int x, final int y);
+
+    /**
+     * Composite two colors together
+     *
+     * @param source The new color
+     * @param dest   The old color (e.g. background)
+     * @param alpha  The alpha
+     *
+     * @return The composited color
+     */
+    protected byte calculateComposite(final byte source, final byte dest, final float alpha) {
+        if (alpha == 0f) {
+            return dest;
+        } else if (alpha == 1f) {
+            return source;
+        } else {
+            if (source >= 0 && source <= 3) {
+                return dest;
+            }
+            if (dest >= 0 && dest <= 3) {
+                return source;
+            }
+
+            final Color newColor = MapColor.mapColorToRgb(source);
+            final Color oldColor = MapColor.mapColorToRgb(dest);
+            final int[] compositedColor = new int[] {
+                    this.composite(newColor.getRed(), oldColor.getRed(), alpha),
+                    this.composite(newColor.getGreen(), oldColor.getGreen(), alpha),
+                    this.composite(newColor.getBlue(), oldColor.getBlue(), alpha)
+            };
+            return ColorCache.rgbToMap(compositedColor[0], compositedColor[1], compositedColor[2]);
+        }
+    }
+
+    /**
+     * Calculate the new component value for two color components with a specific alpha value.
+     * A color component is either red, green or blue.
+     * <p>
+     * Example:
+     * <pre>
+     *     Color someColor = new Color(0, 0, 0);
+     *     Color background = new Color(255, 255, 255);
+     *     float alpha = 0.5f;
+     *     Color newColor = new Color(
+     *         composite(someColor.getRed(), background.getRed(), alpha),
+     *         composite(someColor.getGreen(), background.getGreen(), alpha),
+     *         composite(someColor.getBlue(), background.getBlue(), alpha)
+     *     );
+     *     // newColor ==> java.awt.Color[r=127,g=127,b=127]
+     * </pre>
+     *
+     * @param comp1 First component
+     * @param comp2 Second component
+     * @param a     Alpha
+     *
+     * @return New component
+     */
+    protected int composite(final int comp1, final int comp2, final float a) {
+        final float c1 = comp1 / 255f;
+        final float c2 = comp2 / 255f;
+        return (int) ((c1 * a + c2 * (1f - a)) * 255f);
+    }
+
+    public abstract void renderOnto(C c, P params);
+
+    public abstract int getWidth();
+
+    public abstract int getHeight();
 
 }

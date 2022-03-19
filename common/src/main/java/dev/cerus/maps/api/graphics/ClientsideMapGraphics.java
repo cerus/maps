@@ -10,23 +10,16 @@ public class ClientsideMapGraphics extends MapGraphics<ClientsideMap, Void> {
     private final byte[] data = new byte[WIDTH * WIDTH];
 
     @Override
-    public void fill(final byte color) {
-        for (int x = 0; x < WIDTH; x++) {
-            for (int y = 0; y < WIDTH; y++) {
-                this.setPixel(x, y, color);
-            }
+    public byte setPixel(final int x, final int y, final float alpha, final byte color) {
+        if (x < 0 || x >= WIDTH || y < 0 || y >= WIDTH || alpha == 0f) {
+            return color;
         }
-    }
 
-    @Override
-    public byte setPixel(final int x, final int y, final byte color) {
-        if (x < 0 || x >= WIDTH || y < 0 || y >= WIDTH) {
+        final byte actualColor = this.calculateComposite(color, this.getPixel(x, y), alpha);
+        if (this.getPixel(x, y) == actualColor) {
             return color;
         }
-        if (this.getPixel(x, y) == color) {
-            return color;
-        }
-        return this.setPixelInternal(x, y, color);
+        return this.setPixelInternal(x, y, actualColor);
     }
 
     private byte setPixelInternal(final int x, final int y, final byte color) {
@@ -35,12 +28,13 @@ public class ClientsideMapGraphics extends MapGraphics<ClientsideMap, Void> {
         return bef;
     }
 
-    private byte getPixel(final int x, final int y) {
+    @Override
+    public byte getPixel(final int x, final int y) {
         return this.data[x + y * WIDTH];
     }
 
     @Override
-    public void draw(final ClientsideMap clientsideMap, final Void unused) {
+    public void renderOnto(final ClientsideMap clientsideMap, final Void unused) {
         final Vec2 min = new Vec2(Integer.MAX_VALUE, Integer.MAX_VALUE);
         final Vec2 max = new Vec2(Integer.MIN_VALUE, Integer.MIN_VALUE);
 
@@ -71,6 +65,16 @@ public class ClientsideMapGraphics extends MapGraphics<ClientsideMap, Void> {
         clientsideMap.setY(min.y == Integer.MAX_VALUE ? 0 : min.y);
         clientsideMap.setWidth(max.x == Integer.MIN_VALUE ? 0 : max.x - min.x);
         clientsideMap.setHeight(max.y == Integer.MIN_VALUE ? 0 : max.y - min.y);
+    }
+
+    @Override
+    public int getWidth() {
+        return WIDTH;
+    }
+
+    @Override
+    public int getHeight() {
+        return WIDTH;
     }
 
 }

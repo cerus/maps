@@ -9,14 +9,18 @@ import dev.cerus.maps.api.MapColor;
 import dev.cerus.maps.api.MapScreen;
 import dev.cerus.maps.api.Marker;
 import dev.cerus.maps.api.graphics.MapScreenGraphics;
+import dev.cerus.maps.api.graphics.StandaloneMapGraphics;
 import dev.cerus.maps.api.version.VersionAdapter;
 import dev.cerus.maps.plugin.map.MapScreenRegistry;
 import dev.cerus.maps.util.EntityUtil;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.concurrent.ThreadLocalRandom;
-import net.md_5.bungee.api.chat.TextComponent;
+import javax.imageio.ImageIO;
 import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.Player;
 import org.bukkit.map.MapCursor;
@@ -69,6 +73,7 @@ public class MapsCommand extends BaseCommand {
 
         final MapScreenGraphics graphics = mapScreen.getGraphics();
         graphics.fill((byte) MapColor.WHITE_2.getId());
+        //graphics.fill((byte) 0);
         graphics.drawRect(0, 0, mapScreen.getWidth() * 128 - 1, mapScreen.getHeight() * 128 - 1, (byte) MapColor.BLACK_2.getId());
         graphics.drawLine(1, 1, mapScreen.getWidth() * 128 - 2, mapScreen.getHeight() * 128 - 2, (byte) MapColor.BLACK_2.getId());
         graphics.drawLine(1, mapScreen.getHeight() * 128 - 2, mapScreen.getWidth() * 128 - 2, 1, (byte) MapColor.BLACK_2.getId());
@@ -79,14 +84,49 @@ public class MapsCommand extends BaseCommand {
         graphics.drawText((mapScreen.getWidth() * 128 / 2) - (width / 2), (mapScreen.getHeight() * 128 / 2) - (height / 2), text, (byte) MapColor.GRAY_3.getId(), 3);
 
         if (mapScreen.getMarkers().isEmpty()) {
-            mapScreen.addMarker(new Marker(
-                    16,
-                    16,
-                    (byte) 1,
-                    MapCursor.Type.MANSION,
-                    true,
-                    new TextComponent("affe")
-            ));
+            int x = 16;
+            int y = 256 - 16;
+            byte rot = 0;
+            for (final MapCursor.Type type : MapCursor.Type.values()) {
+                mapScreen.addMarker(new Marker(
+                        x,
+                        y,
+                        rot,
+                        type,
+                        true
+                ));
+                if (x >= 256 * 2 + 64) {
+                    x = 16;
+                    y += 32;
+                } else {
+                    x += 32;
+                }
+                if (rot == 15) {
+                    rot = 0;
+                } else {
+                    rot++;
+                }
+            }
+        }
+
+        try {
+            //final BufferedImage img = ImageIO.read(new URL("https://cerus.dev/img/mc_map_item.png"));
+            //final BufferedImage img = ImageIO.read(new URL("https://upload.wikimedia.org/wikipedia/commons/thumb/7/77/Hue_alpha_falloff.svg/220px-Hue_alpha_falloff.svg.png"));
+            final BufferedImage img = ImageIO.read(new URL("https://cerus.dev/img/edina2_small.png"));
+            graphics.drawImage(img, 0, 0);
+
+            final StandaloneMapGraphics obj = new StandaloneMapGraphics(img.getWidth(), img.getHeight());
+            obj.drawImage(img, 0, 0);
+            obj.boxBlur(
+                    5,
+                    0,
+                    0,
+                    img.getWidth(),
+                    img.getHeight()
+            );
+            graphics.place(obj, 0, img.getHeight() + 10);
+        } catch (final IOException e) {
+            e.printStackTrace();
         }
 
         mapScreen.sendFrames(player);
@@ -122,7 +162,7 @@ public class MapsCommand extends BaseCommand {
 
     @Subcommand("inject")
     @CommandPermission("maps.command.inject")
-    public void handleInject(final Player player, final int id) {
+    public void handleInject(final Player player) {
         this.versionAdapter.inject(player);
     }
 

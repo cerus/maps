@@ -278,13 +278,7 @@ public enum MapColor {
         if (id < 0) {
             id += 256;
         }
-
-        for (final MapColor value : values()) {
-            if (value.getId() == id) {
-                return value;
-            }
-        }
-        return null;
+        return values()[id];
     }
 
     public static Color mapColorToRgb(final byte color) {

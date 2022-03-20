@@ -115,7 +115,7 @@ public class MapScreenRegistry {
                 chunk.addPluginChunkTicket(plugin);
             }
 
-            final MapScreen mapScreen = new MapScreen(versionAdapter, width, height);
+            final MapScreen mapScreen = new MapScreen(id, versionAdapter, width, height);
             mapScreen.setFrameIds(frameIds);
             if (id > highestId) {
                 highestId = id;
@@ -125,7 +125,7 @@ public class MapScreenRegistry {
     }
 
     public static int getNextFreeId() {
-        for (int i = 1; i < highestId; i++) {
+        for (int i = 1; i <= highestId; i++) {
             if (!screenMap.containsKey(i)) {
                 return i;
             }
@@ -133,9 +133,8 @@ public class MapScreenRegistry {
         return highestId + 1;
     }
 
-    public static int registerScreen(final MapScreen screen) {
-        final int id = getNextFreeId();
-        screenMap.put(id, screen);
+    public static void registerScreen(final MapScreen screen) {
+        screenMap.put(screen.getId(), screen);
         if (screen.getFrameIds() != null) {
             Arrays.stream(screen.getFrameIds())
                     .flatMapToInt(Arrays::stream)
@@ -148,10 +147,9 @@ public class MapScreenRegistry {
                     .map(entity -> entity.getLocation().getChunk())
                     .forEach(chunk -> chunk.addPluginChunkTicket(plugin));
         }
-        if (id > highestId) {
-            highestId = id;
+        if (screen.getId() > highestId) {
+            highestId = screen.getId();
         }
-        return id;
     }
 
     public static void removeScreen(final int id) {

@@ -12,6 +12,7 @@ import org.bukkit.entity.Player;
  */
 public class MapScreen {
 
+    private final int id;
     private final VersionAdapter versionAdapter;
     private final ClientsideMap[][] mapArray;
     private final MapScreenGraphics graphics;
@@ -19,7 +20,8 @@ public class MapScreen {
     private final int height;
     private int[][] frameIds;
 
-    public MapScreen(final VersionAdapter versionAdapter, final int w, final int h) {
+    public MapScreen(final int id, final VersionAdapter versionAdapter, final int w, final int h) {
+        this.id = id;
         this.versionAdapter = versionAdapter;
         this.mapArray = new ClientsideMap[w][h];
         for (int x = 0; x < w; x++) {
@@ -32,7 +34,8 @@ public class MapScreen {
         this.height = h;
     }
 
-    public MapScreen(final VersionAdapter versionAdapter, final int w, final int h, final ClientsideMap[][] mapArray) {
+    public MapScreen(final int id, final VersionAdapter versionAdapter, final int w, final int h, final ClientsideMap[][] mapArray) {
+        this.id = id;
         this.versionAdapter = versionAdapter;
         this.mapArray = mapArray;
         this.graphics = new MapScreenGraphics(w, h);
@@ -144,6 +147,10 @@ public class MapScreen {
                 }
             }
         }
+    }
+
+    public int getId() {
+        return this.id;
     }
 
     public int getWidth() {

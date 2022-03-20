@@ -55,9 +55,10 @@ public class MapsCommand extends BaseCommand {
             }
         }
 
-        final MapScreen mapScreen = new MapScreen(this.versionAdapter, result.getWidth(), result.getHeight());
+        final int id = MapScreenRegistry.getNextFreeId();
+        final MapScreen mapScreen = new MapScreen(id, this.versionAdapter, result.getWidth(), result.getHeight());
         mapScreen.setFrameIds(frameIds);
-        final int id = MapScreenRegistry.registerScreen(mapScreen);
+        MapScreenRegistry.registerScreen(mapScreen);
         player.sendMessage("§aScreen §e#" + id + " §ahas been created!");
         this.handleTestScreen(player, id);
     }

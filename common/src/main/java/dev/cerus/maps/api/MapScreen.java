@@ -7,6 +7,9 @@ import java.util.Collection;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
+/**
+ * Represents an array of clientside maps that form a screen
+ */
 public class MapScreen {
 
     private final VersionAdapter versionAdapter;
@@ -37,16 +40,24 @@ public class MapScreen {
         this.height = h;
     }
 
+    /**
+     * Add a marker
+     *
+     * @param marker The marker to add
+     */
     public void addMarker(final Marker marker) {
         final int arrX = marker.getX() / 256;
         final int arrY = marker.getY() / 256;
-        System.out.println(marker.getX() + " > " + arrX + " > " + marker.getCompressedX() + ", "
-                + marker.getY() + " > " + arrY + " > " + marker.getCompressedY());
         if (arrX < this.width && arrY < this.height) {
             this.mapArray[arrX][arrY].addMarker(marker);
         }
     }
 
+    /**
+     * Remove a marker
+     *
+     * @param marker The marker to remove
+     */
     public void removeMarker(final Marker marker) {
         final int arrX = marker.getX() / 128;
         final int arrY = marker.getY() / 128;
@@ -55,6 +66,9 @@ public class MapScreen {
         }
     }
 
+    /**
+     * Remove all markers
+     */
     public void clearMarkers() {
         for (final ClientsideMap[] array : this.mapArray) {
             for (final ClientsideMap clientsideMap : array) {
@@ -63,20 +77,39 @@ public class MapScreen {
         }
     }
 
+    /**
+     * Send the map data to all online players
+     *
+     * @param full True if full map data should be sent
+     */
     public void sendMaps(final boolean full) {
         this.sendMaps(full, Bukkit.getOnlinePlayers());
     }
 
+    /**
+     * Send the map data to the specified players
+     *
+     * @param full    True if full map data should be sent
+     * @param players The receivers
+     */
     public void sendMaps(final boolean full, final Collection<? extends Player> players) {
         this.sendMaps(full, players.toArray(Player[]::new));
     }
 
+    /**
+     * Send the map data to the specified players
+     *
+     * @param full    True if full map data should be sent
+     * @param players The receivers
+     */
     public void sendMaps(final boolean full, final Player... players) {
+        // Render the buffer
         this.graphics.renderOnto(this, this.mapArray);
 
         for (int x = 0; x < this.width; x++) {
             for (int y = 0; y < this.height; y++) {
                 final ClientsideMap map = this.mapArray[x][y];
+                // If bounds are zero there are no changes
                 if (!full && map.getX() == 0 && map.getY() == 0 && map.getWidth() == 0
                         && map.getHeight() == 0 && !map.hasDirtyMarkers()) {
                     continue;
@@ -91,6 +124,11 @@ public class MapScreen {
         }
     }
 
+    /**
+     * Send the frame updates to the players
+     *
+     * @param players The receivers
+     */
     public void sendFrames(final Player... players) {
         if (this.frameIds == null) {
             return;

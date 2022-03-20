@@ -14,7 +14,8 @@ of <a href="https://github.com/cerus/packet-maps">packet-maps</a>.</p>
 • [Quick start for developers](#Quick-start-for-developers)\
 • [Building](#Building)\
 • [FAQ](#FAQ)\
-• [Contributing](#Contributing)
+• [Contributing](#Contributing)\
+• [Sources](#Sources)
 
 <hr>
 
@@ -137,3 +138,16 @@ Please feel free to open an issue or contact me if you have any questions that w
 
 Thank you for your interest in contributing to this project! Before you do anything though please read the [contribution guidelines](CONTRIBUTING.md)
 thoroughly. Contributions that do not conform to the guidelines might be rejected.
+
+### Sources
+
+Lots of graphics features were implemented with the help of the following resources:
+
+- [Alpha Compositing - Wikipedia](https://en.wikipedia.org/wiki/Alpha_compositing#Alpha_blending)
+- [Alpha Compositing - Bartosz Ciechanowski](https://ciechanow.ski/alpha-compositing/)
+- [So you want to write a GUI framework](http://www.cmyr.net/blog/gui-framework-ingredients.html)
+- [Line drawing on a grid](https://www.redblobgames.com/grids/line-drawing.html)
+- [Midpoint ellipse drawing algorithm - GeeksforGeeks](https://www.geeksforgeeks.org/midpoint-ellipse-drawing-algorithm/)
+- [Flood fill - Wikipedia](https://en.wikipedia.org/wiki/Flood_fill)
+- [Box blur - Wikipedia](https://en.wikipedia.org/wiki/Box_blur)
+- StackOverflow

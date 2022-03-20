@@ -4,6 +4,11 @@ import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.chat.ComponentSerializer;
 import org.bukkit.map.MapCursor;
 
+/**
+ * Represents a map marker
+ * <p>
+ * Changes to instances of this maker will call back to the parent clientside map (if one is present)
+ */
 public class Marker {
 
     private int x;
@@ -61,6 +66,7 @@ public class Marker {
         }
     }
 
+    // X pos used in packet
     public byte getCompressedX() {
         return (byte) ((this.x % 256) - 128);
     }
@@ -76,6 +82,7 @@ public class Marker {
         }
     }
 
+    // Y pos used in packet
     public byte getCompressedY() {
         return (byte) ((this.y % 256) - 128);
     }

@@ -4,6 +4,11 @@ import java.awt.Color;
 import java.util.Arrays;
 import java.util.Comparator;
 
+/**
+ * Color data pulled from the Minecraft wiki
+ * <p>
+ * I tried to name the colors as good as possible but the naming still kind of sucks, I'm sorry
+ */
 public enum MapColor {
 
     TRANSPARENT_0(0, null),

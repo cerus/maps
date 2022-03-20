@@ -5,6 +5,9 @@ import dev.cerus.maps.api.graphics.ColorCache;
 import dev.cerus.maps.api.graphics.MapGraphics;
 import java.awt.Color;
 
+/**
+ * Performs box blur on an area. Can be reused
+ */
 public class BoxBlurFilter implements Filter {
 
     private final int passes;
@@ -22,8 +25,9 @@ public class BoxBlurFilter implements Filter {
         this.transparencyHandling = transparencyHandling;
     }
 
+    // https://en.wikipedia.org/wiki/Box_blur
     @Override
-    public byte calculate(final MapGraphics<?, ?> graphics, final int x, final int y, final int minX, final int maxX, final int minY, final int maxY) {
+    public byte apply(final MapGraphics<?, ?> graphics, final int x, final int y, final int minX, final int maxX, final int minY, final int maxY) {
         if (x < minX + 1 || y < minY + 1 || x + 1 == maxX || y + 1 == maxY
                 || (graphics.getPixel(x, y) >= 0 && graphics.getPixel(x, y) <= 3)) {
             return graphics.getPixel(x, y);

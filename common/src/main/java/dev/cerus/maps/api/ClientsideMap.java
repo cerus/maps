@@ -6,6 +6,9 @@ import java.util.ArrayList;
 import java.util.List;
 import org.bukkit.entity.Player;
 
+/**
+ * A map that is completely clientside
+ */
 public class ClientsideMap {
 
     private static final int WIDTH = 128;
@@ -30,30 +33,61 @@ public class ClientsideMap {
         this.markers = new ArrayList<>();
     }
 
+    /**
+     * Send this map to a player
+     *
+     * @param versionAdapter The version adapter
+     * @param player         The player
+     */
     public void sendTo(final VersionAdapter versionAdapter, final Player player) {
         this.sendTo(versionAdapter, false, player);
     }
 
+    /**
+     * Send this map to a player
+     *
+     * @param versionAdapter The version adapter
+     * @param ignoreBounds   True if the whole map should be sent
+     * @param player         The player
+     */
     public void sendTo(final VersionAdapter versionAdapter, final boolean ignoreBounds, final Player player) {
         versionAdapter.sendPacket(player, versionAdapter.makeMapPacket(ignoreBounds, this));
     }
 
+    /**
+     * Draw a graphics buffer onto this map
+     *
+     * @param graphics The buffer
+     */
     public void draw(final MapGraphics<ClientsideMap, ?> graphics) {
         graphics.renderOnto(this, null);
     }
 
+    /**
+     * Add a marker
+     *
+     * @param marker The marker to add
+     */
     public void addMarker(final Marker marker) {
         this.markers.add(marker);
         marker.setParent(this);
         this.dirtyMarkers = true;
     }
 
+    /**
+     * Remove a marker
+     *
+     * @param marker The marker to remove
+     */
     public void removeMarker(final Marker marker) {
         if (this.markers.remove(marker)) {
             this.dirtyMarkers = true;
         }
     }
 
+    /**
+     * Remove all markers
+     */
     public void clearMarkers() {
         if (!this.markers.isEmpty()) {
             this.markers.clear();

@@ -5,7 +5,14 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 
+/**
+ * Collection of reflection utility methods
+ */
 public class ReflectionUtil {
+
+    private ReflectionUtil() {
+        throw new UnsupportedOperationException();
+    }
 
     public static Object invoke(final String name, final Class<?> cls, final Object o, final Object[] params) throws IllegalAccessException, NoSuchMethodException, InvocationTargetException {
         return invoke(name, cls, o, Arrays.stream(params).map(Object::getClass).toArray(Class[]::new), params);

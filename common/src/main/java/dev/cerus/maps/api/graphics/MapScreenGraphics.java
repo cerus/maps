@@ -3,6 +3,11 @@ package dev.cerus.maps.api.graphics;
 import dev.cerus.maps.api.ClientsideMap;
 import dev.cerus.maps.api.MapScreen;
 
+/**
+ * Graphics implementation for map screens
+ * <p>
+ * Uses clientside map graphics under the hood
+ */
 public class MapScreenGraphics extends MapGraphics<MapScreen, ClientsideMap[][]> {
 
     private final int width;
@@ -22,22 +27,33 @@ public class MapScreenGraphics extends MapGraphics<MapScreen, ClientsideMap[][]>
 
     @Override
     public byte setPixel(final int x, final int y, final float alpha, final byte color) {
+        if (x < 0 || y < 0) {
+            return color;
+        }
+
         final int arrX = x / 128;
         final int arrY = y / 128;
 
+        // Check bounds
         if (arrX >= this.graphicsArray.length || arrY >= this.graphicsArray[arrX].length || alpha == 0f) {
             return (byte) 0;
         }
 
+        // Get right graphics and set pixel
         final ClientsideMapGraphics graphics = this.graphicsArray[arrX][arrY];
         return graphics.setPixel(x % 128, y % 128, alpha, color);
     }
 
     @Override
     public byte getPixel(final int x, final int y) {
+        if (x < 0 || y < 0) {
+            return 0;
+        }
+
         final int arrX = x / 128;
         final int arrY = y / 128;
 
+        // Check bounds
         if (arrX >= this.graphicsArray.length || arrY >= this.graphicsArray[arrX].length) {
             return (byte) 0;
         }
@@ -46,9 +62,9 @@ public class MapScreenGraphics extends MapGraphics<MapScreen, ClientsideMap[][]>
     }
 
     @Override
-    public void renderOnto(final MapScreen screen, final ClientsideMap[][] array) {
-        for (int x = 0; x < screen.getWidth(); x++) {
-            for (int y = 0; y < screen.getHeight(); y++) {
+    public void renderOnto(final MapScreen renderTarget, final ClientsideMap[][] array) {
+        for (int x = 0; x < renderTarget.getWidth(); x++) {
+            for (int y = 0; y < renderTarget.getHeight(); y++) {
                 array[x][y].draw(this.graphicsArray[x][y]);
             }
         }

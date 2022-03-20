@@ -150,4 +150,5 @@ Lots of graphics features were implemented with the help of the following resour
 - [Midpoint ellipse drawing algorithm - GeeksforGeeks](https://www.geeksforgeeks.org/midpoint-ellipse-drawing-algorithm/)
 - [Flood fill - Wikipedia](https://en.wikipedia.org/wiki/Flood_fill)
 - [Box blur - Wikipedia](https://en.wikipedia.org/wiki/Box_blur)
+- [Porter/Duff Compositing and Blend Modes - Søren Sandmann Pedersen](http://ssp.impulsetrain.com/porterduff.html)
 - StackOverflow

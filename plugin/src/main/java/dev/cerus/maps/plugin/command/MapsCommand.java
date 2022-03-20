@@ -302,10 +302,4 @@ public class MapsCommand extends BaseCommand {
         player.sendMessage("§7Screen §b#" + id + " §7(" + screen.getWidth() + "x" + screen.getHeight() + ")");
     }
 
-    @Subcommand("inject")
-    @CommandPermission("maps.command.inject")
-    public void handleInject(final Player player) {
-        this.versionAdapter.inject(player);
-    }
-
 }

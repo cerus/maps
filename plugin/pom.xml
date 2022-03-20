@@ -83,7 +83,7 @@
     </dependencies>
 
     <build>
-        <finalName>maps</finalName>
+        <finalName>maps-plugin</finalName>
         <defaultGoal>clean package</defaultGoal>
         <plugins>
             <plugin>

@@ -20,12 +20,13 @@ public class StandaloneMapGraphics extends MapGraphics<MapGraphics<?, ?>, Vec2> 
     @Override
     public byte setPixel(final int x, final int y, final float alpha, final byte color) {
         // Lots of bounds and alpha checking
-        if (x < 0 || x >= this.width || y < 0 || y >= this.height || alpha == 0f) {
+        final float normAlpha = this.normalizeAlpha(alpha);
+        if (x < 0 || x >= this.width || y < 0 || y >= this.height || normAlpha == 0f) {
             return color;
         }
 
         // More compositing
-        final byte actualColor = alpha == 1f ? color : this.calculateComposite(color, this.getPixel(x, y), alpha);
+        final byte actualColor = normAlpha == 1f ? color : this.calculateComposite(color, this.getPixel(x, y), normAlpha);
         if (this.getPixel(x, y) == actualColor) {
             return color;
         }

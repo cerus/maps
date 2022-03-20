@@ -15,12 +15,13 @@ public class ClientsideMapGraphics extends MapGraphics<ClientsideMap, Void> {
 
     @Override
     public byte setPixel(final int x, final int y, final float alpha, final byte color) {
-        if (x < 0 || x >= WIDTH || y < 0 || y >= WIDTH || alpha == 0f) {
+        final float normAlpha = this.normalizeAlpha(alpha);
+        if (x < 0 || x >= WIDTH || y < 0 || y >= WIDTH || normAlpha == 0f) {
             return color;
         }
 
         // We do a little compositing
-        final byte actualColor = this.calculateComposite(color, this.getPixel(x, y), alpha);
+        final byte actualColor = normAlpha == 1f ? color : this.calculateComposite(color, this.getPixel(x, y), normAlpha);
         if (this.getPixel(x, y) == actualColor) {
             return color;
         }

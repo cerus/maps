@@ -821,6 +821,10 @@ public abstract class MapGraphics<C, P> {
         return color == 0;
     }
 
+    protected float normalizeAlpha(final float a) {
+        return Math.max(0f, Math.min(1f, a));
+    }
+
     /**
      * Basically copies this buffer onto the buffer of the specified render target
      *

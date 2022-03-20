@@ -9,6 +9,7 @@ import dev.cerus.maps.api.MapColor;
 import dev.cerus.maps.api.MapScreen;
 import dev.cerus.maps.api.Marker;
 import dev.cerus.maps.api.graphics.ColorCache;
+import dev.cerus.maps.api.graphics.FunctionalMapGraphics;
 import dev.cerus.maps.api.graphics.MapGraphics;
 import dev.cerus.maps.api.graphics.MapScreenGraphics;
 import dev.cerus.maps.api.graphics.StandaloneMapGraphics;
@@ -138,10 +139,26 @@ public class MapsCommand extends BaseCommand {
         }
 
         final MapScreenGraphics graphics = mapScreen.getGraphics();
-        graphics.fillComplete(ColorCache.rgbToMap(0, 0, 255));
+        //graphics.fillComplete(ColorCache.rgbToMap(0, 0, 255));
         mapScreen.clearMarkers();
 
-        graphics.drawEllipse(
+        FunctionalMapGraphics.backedBy(graphics)
+                .with(g -> g.fillComplete(ColorCache.rgbToMap(0, 255, 255)))
+                .with(g -> g.drawEllipse(
+                        mapScreen.getWidth() * 128 / 2,
+                        mapScreen.getHeight() * 128 / 2,
+                        (mapScreen.getWidth() * 128 - 64) / 2,
+                        (mapScreen.getHeight() * 128 - 128) / 2,
+                        ColorCache.rgbToMap(255, 0, 0)
+                ))
+                .with(g -> g.fill(
+                        mapScreen.getWidth() * 128 / 2,
+                        mapScreen.getHeight() * 128 / 2,
+                        ColorCache.rgbToMap(0, 255, 0),
+                        1f
+                ));
+
+        /*graphics.drawEllipse(
                 mapScreen.getWidth() * 128 / 2,
                 mapScreen.getHeight() * 128 / 2,
                 (mapScreen.getWidth() * 128 - 64) / 2,
@@ -153,7 +170,7 @@ public class MapsCommand extends BaseCommand {
                 mapScreen.getHeight() * 128 / 2,
                 ColorCache.rgbToMap(0, 255, 0),
                 1f
-        );
+        );*/
         mapScreen.sendFrames(player);
         mapScreen.sendMaps(false, player);
     }

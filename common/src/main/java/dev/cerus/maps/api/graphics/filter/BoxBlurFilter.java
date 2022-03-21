@@ -76,9 +76,9 @@ public class BoxBlurFilter implements Filter {
     private int mapToRgb(final byte color) {
         if (color >= 0 && color <= 3) {
             if (this.transparencyHandling == TransparencyHandling.TREAT_AS_WHITE) {
-                return new Color(255, 255, 255).getRGB();
+                return new Color(255, 255, 255, 0).getRGB();
             } else if (this.transparencyHandling == TransparencyHandling.TREAT_AS_BLACK) {
-                return new Color(0, 0, 0).getRGB();
+                return new Color(0, 0, 0, 0).getRGB();
             } else if (this.transparencyHandling == TransparencyHandling.IGNORE) {
                 return -1;
             } else if (this.transparencyHandling == TransparencyHandling.KEEP_ORIGINAL) {

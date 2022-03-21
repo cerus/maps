@@ -84,6 +84,11 @@ public class ClientsideMapGraphics extends MapGraphics<ClientsideMap, Void> {
     }
 
     @Override
+    public MapGraphics<ClientsideMap, Void> copy() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public int getWidth() {
         return WIDTH;
     }

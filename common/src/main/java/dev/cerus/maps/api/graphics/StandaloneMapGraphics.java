@@ -41,6 +41,13 @@ public class StandaloneMapGraphics extends MapGraphics<MapGraphics<?, ?>, Vec2> 
 
     @Override
     public byte getPixel(final int x, final int y) {
+        if (x < 0 || x >= this.width || y < 0 || y >= this.height) {
+            return 0;
+        }
+        return this.getPixelDirect(x, y);
+    }
+
+    private byte getPixelDirect(final int x, final int y) {
         return this.data[x * this.height + y];
     }
 
@@ -51,6 +58,17 @@ public class StandaloneMapGraphics extends MapGraphics<MapGraphics<?, ?>, Vec2> 
                 renderTarget.setPixel(params.x + x, params.y + y, this.getPixel(x, y));
             }
         }
+    }
+
+    @Override
+    public MapGraphics<MapGraphics<?, ?>, Vec2> copy() {
+        final StandaloneMapGraphics copy = new StandaloneMapGraphics(this.width, this.height);
+        for (int x = 0; x < this.width; x++) {
+            for (int y = 0; y < this.height; y++) {
+                copy.setPixelInternal(x, y, this.getPixelDirect(x, y));
+            }
+        }
+        return copy;
     }
 
     @Override

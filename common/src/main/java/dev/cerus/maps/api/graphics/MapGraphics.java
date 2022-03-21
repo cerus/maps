@@ -834,6 +834,13 @@ public abstract class MapGraphics<C, P> {
     public abstract void renderOnto(C renderTarget, P params);
 
     /**
+     * Make a copy of this buffer
+     *
+     * @return A copy of this buffer
+     */
+    public abstract MapGraphics<C, P> copy();
+
+    /**
      * Get the width in pixels of this buffer
      *
      * @return The width

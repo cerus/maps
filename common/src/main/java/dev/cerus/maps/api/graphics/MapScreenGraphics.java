@@ -71,6 +71,11 @@ public class MapScreenGraphics extends MapGraphics<MapScreen, ClientsideMap[][]>
     }
 
     @Override
+    public MapGraphics<MapScreen, ClientsideMap[][]> copy() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public int getWidth() {
         return this.width * 128;
     }

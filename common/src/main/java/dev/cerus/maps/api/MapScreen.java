@@ -1,5 +1,7 @@
 package dev.cerus.maps.api;
 
+import dev.cerus.maps.api.graphics.FastMapScreenGraphics;
+import dev.cerus.maps.api.graphics.MapGraphics;
 import dev.cerus.maps.api.graphics.MapScreenGraphics;
 import dev.cerus.maps.api.version.VersionAdapter;
 import java.util.Arrays;
@@ -15,9 +17,9 @@ public class MapScreen {
     private final int id;
     private final VersionAdapter versionAdapter;
     private final ClientsideMap[][] mapArray;
-    private final MapScreenGraphics graphics;
     private final int width;
     private final int height;
+    private MapGraphics<MapScreen, ClientsideMap[][]> graphics;
     private int[][] frameIds;
 
     public MapScreen(final int id, final VersionAdapter versionAdapter, final int w, final int h) {
@@ -161,7 +163,12 @@ public class MapScreen {
         return this.height;
     }
 
-    public MapScreenGraphics getGraphics() {
+    public void useFastGraphics(final boolean b) {
+        this.graphics = b ? new FastMapScreenGraphics(this.width, this.height)
+                : new MapScreenGraphics(this.width, this.height);
+    }
+
+    public MapGraphics<MapScreen, ClientsideMap[][]> getGraphics() {
         return this.graphics;
     }
 

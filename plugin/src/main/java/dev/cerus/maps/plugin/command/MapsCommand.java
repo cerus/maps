@@ -11,7 +11,6 @@ import dev.cerus.maps.api.Marker;
 import dev.cerus.maps.api.graphics.ColorCache;
 import dev.cerus.maps.api.graphics.FunctionalMapGraphics;
 import dev.cerus.maps.api.graphics.MapGraphics;
-import dev.cerus.maps.api.graphics.MapScreenGraphics;
 import dev.cerus.maps.api.graphics.StandaloneMapGraphics;
 import dev.cerus.maps.api.version.VersionAdapter;
 import dev.cerus.maps.plugin.map.MapScreenRegistry;
@@ -72,7 +71,7 @@ public class MapsCommand extends BaseCommand {
             return;
         }
 
-        final MapScreenGraphics graphics = mapScreen.getGraphics();
+        final MapGraphics<?, ?> graphics = mapScreen.getGraphics();
         graphics.fillComplete((byte) MapColor.WHITE_2.getId());
         //graphics.fill((byte) 0);
         graphics.drawRect(0, 0, mapScreen.getWidth() * 128 - 1, mapScreen.getHeight() * 128 - 1, (byte) MapColor.BLACK_2.getId(), 1f);
@@ -97,7 +96,7 @@ public class MapsCommand extends BaseCommand {
             return;
         }
 
-        final MapScreenGraphics graphics = mapScreen.getGraphics();
+        final MapGraphics<?, ?> graphics = mapScreen.getGraphics();
         graphics.fillComplete(ColorCache.rgbToMap(0, 0, 255));
         mapScreen.clearMarkers();
 
@@ -139,7 +138,7 @@ public class MapsCommand extends BaseCommand {
             return;
         }
 
-        final MapScreenGraphics graphics = mapScreen.getGraphics();
+        final MapGraphics<?, ?> graphics = mapScreen.getGraphics();
         //graphics.fillComplete(ColorCache.rgbToMap(0, 0, 255));
         mapScreen.clearMarkers();
 
@@ -187,7 +186,7 @@ public class MapsCommand extends BaseCommand {
 
         long nanoBefore = System.nanoTime();
 
-        final MapScreenGraphics graphics = mapScreen.getGraphics();
+        final MapGraphics<?, ?> graphics = mapScreen.getGraphics();
         graphics.fillComplete(ColorCache.rgbToMap(0, 0, 255));
         mapScreen.clearMarkers();
 

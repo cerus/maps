@@ -31,13 +31,21 @@ public class ClientsideMapGraphics extends MapGraphics<ClientsideMap, Void> {
     // Set pixel directly, skip any checks
     private byte setPixelInternal(final int x, final int y, final byte color) {
         final byte bef = this.getPixel(x, y);
-        this.data[x + y * WIDTH] = color;
+        this.data[this.index(x, y, WIDTH, WIDTH)] = color;
         return bef;
     }
 
     @Override
     public byte getPixel(final int x, final int y) {
-        return this.data[x + y * WIDTH];
+        if (x < 0 || x >= WIDTH || y < 0 || y >= WIDTH) {
+            return 0;
+        }
+        return this.getPixelDirect(x, y);
+    }
+
+    private byte getPixelDirect(final int x, final int y) {
+        //return this.data[x * this.height + y];
+        return this.data[this.index(x, y, WIDTH, WIDTH)];
     }
 
     /**
@@ -86,6 +94,12 @@ public class ClientsideMapGraphics extends MapGraphics<ClientsideMap, Void> {
     @Override
     public MapGraphics<ClientsideMap, Void> copy() {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public byte[] getDirectAccessData() {
+        //return this.data;
+        return null;
     }
 
     @Override

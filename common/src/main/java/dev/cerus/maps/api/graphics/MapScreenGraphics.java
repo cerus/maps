@@ -26,6 +26,15 @@ public class MapScreenGraphics extends MapGraphics<MapScreen, ClientsideMap[][]>
     }
 
     @Override
+    public void fillComplete(final byte color) {
+        for (final ClientsideMapGraphics[] array : this.graphicsArray) {
+            for (final ClientsideMapGraphics g : array) {
+                g.fillComplete(color);
+            }
+        }
+    }
+
+    @Override
     public byte setPixel(final int x, final int y, final float alpha, final byte color) {
         if (x < 0 || y < 0) {
             return color;

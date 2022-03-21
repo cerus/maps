@@ -14,7 +14,7 @@ public class StandaloneMapGraphics extends MapGraphics<MapGraphics<?, ?>, Vec2> 
     public StandaloneMapGraphics(final int width, final int height) {
         this.width = width;
         this.height = height;
-        this.data = new byte[width * height];
+        this.data = new byte[Math.max(width, height) * Math.max(width, height)];
     }
 
     @Override
@@ -35,7 +35,7 @@ public class StandaloneMapGraphics extends MapGraphics<MapGraphics<?, ?>, Vec2> 
 
     private byte setPixelInternal(final int x, final int y, final byte color) {
         final byte bef = this.getPixel(x, y);
-        this.data[x * this.height + y] = color;
+        this.data[this.index(x, y, this.width, this.height)] = color;
         return bef;
     }
 
@@ -48,7 +48,8 @@ public class StandaloneMapGraphics extends MapGraphics<MapGraphics<?, ?>, Vec2> 
     }
 
     private byte getPixelDirect(final int x, final int y) {
-        return this.data[x * this.height + y];
+        //return this.data[x * this.height + y];
+        return this.data[this.index(x, y, this.width, this.height)];
     }
 
     @Override
@@ -69,6 +70,11 @@ public class StandaloneMapGraphics extends MapGraphics<MapGraphics<?, ?>, Vec2> 
             }
         }
         return copy;
+    }
+
+    @Override
+    public byte[] getDirectAccessData() {
+        return this.data;
     }
 
     @Override

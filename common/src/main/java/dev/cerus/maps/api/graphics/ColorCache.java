@@ -26,19 +26,11 @@ public class ColorCache {
      * @return Cached map color
      */
     public static byte rgbToMap(final int r, final int g, final int b) {
-        final int index = convert3Dto1D(r, g, b);
+        final int index = new Color(r, g, b, 0).getRGB();
         if (mappedColors[index] == 0) {
             mappedColors[index] = (byte) MapColor.rgbToMapColor(r, g, b).getId();
         }
         return mappedColors[index];
-    }
-
-    // https://stackoverflow.com/a/34363187/10821925
-    private static int convert3Dto1D(final int x, final int y, final int z) {
-        if (true) {
-            return new Color(x, y, z, 0).getRGB();
-        }
-        return (z * 256 * 256) + (y * 256) + x;
     }
 
 }

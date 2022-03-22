@@ -3,6 +3,7 @@ package dev.cerus.maps.api.graphics;
 import dev.cerus.maps.api.MapColor;
 import dev.cerus.maps.api.graphics.filter.BoxBlurFilter;
 import dev.cerus.maps.api.graphics.filter.Filter;
+import dev.cerus.maps.api.graphics.filter.GrayscaleFilter;
 import dev.cerus.maps.util.Vec2;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
@@ -225,6 +226,20 @@ public abstract class MapGraphics<C, P> {
         }
     }
 
+    public void fillWithBuffer(final MapGraphics<?, ?> graphics, final float alpha, final boolean ignoreTransparent) {
+        int x = 0;
+        int y = 0;
+        while (y < this.getHeight()) {
+            this.place(graphics, x, y, alpha, ignoreTransparent);
+            x += graphics.getWidth();
+
+            if (x >= this.getWidth()) {
+                x = 0;
+                y += graphics.getHeight();
+            }
+        }
+    }
+
     /**
      * Copy the contents of the specified graphics instance onto the buffer of
      * this graphics instance at the specified position
@@ -261,16 +276,23 @@ public abstract class MapGraphics<C, P> {
      * @param ignoreTransparent Should transparent pixels not be copied?
      */
     public void place(final MapGraphics<?, ?> graphics, final int x, final int y, final float alpha, final boolean ignoreTransparent) {
+        if (x >= this.getWidth() || y >= this.getHeight() || x < 0 || y < 0) {
+            return;
+        }
         if (this.hasDirectAccessCapabilities()
                 && graphics.hasDirectAccessCapabilities()
                 && !ignoreTransparent) {
-            for (int r = 0; r < graphics.getHeight(); r++) {
+            for (int r = 0; r < (y + graphics.getHeight() >= this.getHeight()
+                    ? this.getHeight() - y
+                    : graphics.getHeight()); r++) {
                 System.arraycopy(
                         graphics.getDirectAccessData(),
                         this.index(0, r, graphics.getWidth(), graphics.getHeight()) /*r * graphics.getWidth()*/,
                         this.getDirectAccessData(),
                         this.index(x, r + y, this.getWidth(), this.getHeight()) /*x + (r + y) * this.getWidth()*/,
-                        graphics.getWidth()
+                        x + graphics.getWidth() >= this.getWidth()
+                                ? this.getWidth() - x
+                                : graphics.getWidth()
                 );
             }
         } else {
@@ -283,6 +305,18 @@ public abstract class MapGraphics<C, P> {
                 }
             }
         }
+    }
+
+    /**
+     * Perform box blur on a rectangular area
+     *
+     * @param x      X coordinate
+     * @param y      Y coordinate
+     * @param width  Area width
+     * @param height Area height
+     */
+    public void grayscale(final int x, final int y, final int width, final int height) {
+        this.applyFilterToArea(new GrayscaleFilter(), x, y, width, height);
     }
 
     /**

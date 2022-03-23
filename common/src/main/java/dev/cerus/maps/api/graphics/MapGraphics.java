@@ -632,12 +632,14 @@ public abstract class MapGraphics<C, P> {
      * @param startColor The color
      * @param size       The size multiplier (1 = normal)
      */
-    public void drawText(int x, int y, final String text, final byte startColor, final int size) {
+    public void drawText(final int x, final int y, final String text, final byte startColor, final int size) {
+        this.drawText(x, y, text, MinecraftFont.Font, startColor, size);
+    }
+
+    public void drawText(int x, int y, final String text, final MapFont font, final byte startColor, final int size) {
         if (size <= 0) {
             throw new IllegalArgumentException("size <= 0");
         }
-
-        final MapFont font = MinecraftFont.Font;
 
         final int xStart = x;
         byte color = startColor;

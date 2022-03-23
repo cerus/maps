@@ -17,6 +17,25 @@ public class StandaloneMapGraphics extends MapGraphics<MapGraphics<?, ?>, Vec2> 
         this.data = new byte[Math.max(width, height) * Math.max(width, height)];
     }
 
+    public static StandaloneMapGraphics copyOf(final MapGraphics<?, ?> graphics) {
+        if (!graphics.hasDirectAccessCapabilities()) {
+            throw new IllegalArgumentException("Graphics needs direct access capabilities");
+        }
+
+        final StandaloneMapGraphics out = new StandaloneMapGraphics(graphics.getWidth(), graphics.getHeight());
+        for (int r = 0; r < out.height; r++) {
+            final int pos = out.index(0, r, out.width, out.height);
+            System.arraycopy(
+                    graphics.getDirectAccessData(),
+                    pos,
+                    out.data,
+                    pos,
+                    out.width
+            );
+        }
+        return out;
+    }
+
     @Override
     public byte setPixel(final int x, final int y, final float alpha, final byte color) {
         // Lots of bounds and alpha checking

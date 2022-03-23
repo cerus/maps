@@ -276,23 +276,33 @@ public abstract class MapGraphics<C, P> {
      * @param ignoreTransparent Should transparent pixels not be copied?
      */
     public void place(final MapGraphics<?, ?> graphics, final int x, final int y, final float alpha, final boolean ignoreTransparent) {
-        if (x >= this.getWidth() || y >= this.getHeight() || x < 0 || y < 0) {
+        if (x >= this.getWidth() || y >= this.getHeight() || x + graphics.getWidth() < 0 || y + graphics.getWidth() < 0) {
             return;
         }
         if (this.hasDirectAccessCapabilities()
                 && graphics.hasDirectAccessCapabilities()
                 && !ignoreTransparent) {
-            for (int r = 0; r < (y + graphics.getHeight() >= this.getHeight()
+            for (int r = y < 0 ? -y : 0; r < (y + graphics.getHeight() >= this.getHeight()
                     ? this.getHeight() - y
                     : graphics.getHeight()); r++) {
+                final int srcX = x < 0 ? -x : 0;
+                final int srcW = graphics.getWidth();
+                final int srcH = graphics.getHeight();
+                final int len;
+                if (x + graphics.getWidth() >= this.getWidth()) {
+                    len = this.getWidth() - x;
+                } else if (x < 0) {
+                    len = graphics.getWidth() - (-x);
+                } else {
+                    len = graphics.getWidth();
+                }
+
                 System.arraycopy(
                         graphics.getDirectAccessData(),
-                        this.index(0, r, graphics.getWidth(), graphics.getHeight()) /*r * graphics.getWidth()*/,
+                        this.index(srcX, r, srcW, srcH) /*r * graphics.getWidth()*/,
                         this.getDirectAccessData(),
-                        this.index(x, r + y, this.getWidth(), this.getHeight()) /*x + (r + y) * this.getWidth()*/,
-                        x + graphics.getWidth() >= this.getWidth()
-                                ? this.getWidth() - x
-                                : graphics.getWidth()
+                        this.index(Math.max(0, x), r + y, this.getWidth(), this.getHeight()) /*x + (r + y) * this.getWidth()*/,
+                        len
                 );
             }
         } else {

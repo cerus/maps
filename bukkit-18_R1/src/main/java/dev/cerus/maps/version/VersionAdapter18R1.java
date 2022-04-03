@@ -25,6 +25,23 @@ public class VersionAdapter18R1 implements VersionAdapter {
 
     @Override
     public Object makeMapPacket(final boolean ignoreBounds, final ClientsideMap map) {
+        final int x = ignoreBounds ? 0 : map.getX();
+        final int y = ignoreBounds ? 0 : map.getY();
+        final int w = ignoreBounds ? 128 : map.getWidth();
+        final int h = ignoreBounds ? 128 : map.getHeight();
+
+        final byte[] data;
+        if (ignoreBounds) {
+            data = map.getData();
+        } else {
+            data = new byte[w * h];
+            for (int xx = 0; xx < w; ++xx) {
+                for (int yy = 0; yy < h; ++yy) {
+                    data[xx + yy * w] = map.getData()[x + xx + (y + yy) * 128];
+                }
+            }
+        }
+
         return new PacketPlayOutMap(
                 map.getId(),
                 (byte) 0,
@@ -39,11 +56,11 @@ public class VersionAdapter18R1 implements VersionAdapter {
                         ))
                         .collect(Collectors.toList()),
                 new WorldMap.b(
-                        ignoreBounds ? 0 : map.getX(),
-                        ignoreBounds ? 0 : map.getY(),
-                        ignoreBounds ? 128 : map.getWidth(),
-                        ignoreBounds ? 128 : map.getHeight(),
-                        map.getData()
+                        x,
+                        y,
+                        w,
+                        h,
+                        data
                 )
         );
     }

@@ -946,8 +946,14 @@ public abstract class MapGraphics<C, P> {
         return null;
     }
 
-    protected int index(final int x, final int y, final int w, final int h) {
-        return x + y * Math.max(w, h);
+    public int index(final int x, final int y) {
+        return this.index(x, y, this.getWidth(), this.getHeight());
+    }
+
+    public int index(final int x, final int y, final int w, final int h) {
+        final int a = w >= h ? x : y;
+        final int b = w >= h ? y : x;
+        return a + b * Math.max(w, h);
     }
 
 }

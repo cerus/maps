@@ -14,6 +14,10 @@ public class FontConverter {
     public static final List<Character> ASCII = List.copyOf(IntStream.range(26, 127)
             .mapToObj(v -> (char) v)
             .toList());
+    public static final List<Character> UNICODE = List.copyOf(IntStream.range(0, Character.MAX_VALUE)
+            .filter(value -> Character.isDefined((char) value))
+            .mapToObj(v -> (char) v)
+            .toList());
 
     private FontConverter() {
         throw new UnsupportedOperationException();
@@ -45,13 +49,13 @@ public class FontConverter {
             return null;
         }
 
-        image = newImg((int) bounds.getWidth(), (int) bounds.getHeight());
+        image = newImg((int) Math.ceil(bounds.getWidth()), (int) Math.ceil(bounds.getHeight()));
         graphics = image.createGraphics();
         graphics.setColor(new Color(0, 0, 0, 0));
         graphics.fillRect(0, 0, image.getWidth(), image.getHeight());
         graphics.setColor(Color.BLACK);
         graphics.setFont(font);
-        graphics.drawString(String.valueOf(c), 0, image.getHeight() - 1);
+        graphics.drawString(String.valueOf(c), 0, graphics.getFontMetrics().getAscent());
         graphics.dispose();
         return image;
     }

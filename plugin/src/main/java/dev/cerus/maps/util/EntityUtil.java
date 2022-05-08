@@ -25,7 +25,7 @@ public class EntityUtil {
         final List<ItemFrame> tempList = new ArrayList<>();
 
         final Vector widthVector;
-        final Vector heightVector = new Vector(0, 1, 0);
+        Vector heightVector = new Vector(0, 1, 0);
         switch (facing) {
             case NORTH:
                 widthVector = new Vector(-1, 0, 0);
@@ -38,6 +38,10 @@ public class EntityUtil {
                 break;
             case WEST:
                 widthVector = new Vector(0, 0, 1);
+                break;
+            case UP:
+                widthVector = new Vector(1, 0, 0);
+                heightVector = new Vector(0, 0, -1);
                 break;
             default:
                 return new ItemFrameResult(new ItemFrame[0][0], 0, 0);

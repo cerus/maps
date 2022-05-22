@@ -7,6 +7,7 @@ import dev.cerus.maps.api.version.VersionAdapter;
 import java.util.Arrays;
 import java.util.Collection;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
 /**
@@ -21,6 +22,7 @@ public class MapScreen {
     private final int height;
     private MapGraphics<MapScreen, ClientsideMap[][]> graphics;
     private int[][] frameIds;
+    private Location location;
 
     public MapScreen(final int id, final VersionAdapter versionAdapter, final int w, final int h) {
         this.id = id;
@@ -185,6 +187,14 @@ public class MapScreen {
                 .flatMap(Arrays::stream)
                 .flatMap(clientsideMap -> clientsideMap.getMarkers().stream())
                 .toList();
+    }
+
+    public Location getLocation() {
+        return this.location;
+    }
+
+    public void setLocation(final Location location) {
+        this.location = location;
     }
 
 }

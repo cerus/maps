@@ -476,8 +476,8 @@ public abstract class MapGraphics<C, P> {
         if (this.hasDirectAccessCapabilities() && alpha == 1f) {
             for (int r = 0; r < h; r++) {
                 Arrays.fill(this.getDirectAccessData(),
-                        this.index(x, r + y, this.getWidth(), this.getHeight()) /*x + (r + y) * this.getWidth()*/,
-                        this.index(x + w, r + y, this.getWidth(), this.getHeight()) /*(x + w) + (r + y) * this.getWidth()*/,
+                        Math.max(0, this.index(x, r + y, this.getWidth(), this.getHeight())) /*x + (r + y) * this.getWidth()*/,
+                        Math.min(this.getDirectAccessData().length - 1, this.index(Math.min(this.getWidth(), x + w), r + y, this.getWidth(), this.getHeight())) /*(x + w) + (r + y) * this.getWidth()*/,
                         color);
             }
         } else {
@@ -503,7 +503,7 @@ public abstract class MapGraphics<C, P> {
         this.drawLineX(x, x + w, y, color, alpha);
         this.drawLineX(x, x + w, y + h, color, alpha);
         this.drawLineY(y, y + h, x, color, alpha);
-        this.drawLineY(y, y + h + 1, x + w, color, alpha);
+        this.drawLineY(y, y + h, x + w, color, alpha);
     }
 
     /**

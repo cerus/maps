@@ -14,6 +14,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
+import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Entity;
@@ -79,6 +80,7 @@ public class MapScreenRegistry {
             final int id = section.getInt("id");
             final int width = section.getInt("width");
             final int height = section.getInt("height");
+            Location location = null;
 
             final UUID worldId = UUID.fromString(section.getString("world"));
             final World world = Bukkit.getWorld(worldId);
@@ -108,6 +110,10 @@ public class MapScreenRegistry {
                     continue screenLoop;
                 }
 
+                if (location == null) {
+                    location = itemFrame.getLocation().clone();
+                }
+
                 frameIds[Integer.parseInt(posSplit[0])][Integer.parseInt(posSplit[1])] = itemFrame.getEntityId();
                 tempChunkSet.add(chunk);
             }
@@ -116,6 +122,7 @@ public class MapScreenRegistry {
             }
 
             final MapScreen mapScreen = new MapScreen(id, versionAdapter, width, height);
+            mapScreen.setLocation(location);
             mapScreen.setFrameIds(frameIds);
             if (id > highestId) {
                 highestId = id;

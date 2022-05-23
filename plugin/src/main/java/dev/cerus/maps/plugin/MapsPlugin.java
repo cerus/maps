@@ -39,8 +39,8 @@ public class MapsPlugin extends JavaPlugin {
                 this.getLogger().info("Loading screens..");
                 MapScreenRegistry.load(config, versionAdapter);
                 this.getLogger().info(MapScreenRegistry.getScreenIds().size() + " screens were loaded");
-                this.areScreensLoaded = true;
             }
+            this.areScreensLoaded = true;
         }, mapsConfig.getInt("loading-delay", 3) * 20L);
 
         final BukkitCommandManager commandManager = new BukkitCommandManager(this);

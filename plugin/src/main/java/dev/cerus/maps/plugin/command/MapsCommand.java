@@ -56,6 +56,7 @@ public class MapsCommand extends BaseCommand {
 
         final int id = MapScreenRegistry.getNextFreeId();
         final MapScreen mapScreen = new MapScreen(id, this.versionAdapter, result.getWidth(), result.getHeight());
+        mapScreen.setLocation(startingFrame.getLocation());
         mapScreen.setFrameIds(frameIds);
         MapScreenRegistry.registerScreen(mapScreen);
         player.sendMessage("§aScreen §e#" + id + " §ahas been created!");

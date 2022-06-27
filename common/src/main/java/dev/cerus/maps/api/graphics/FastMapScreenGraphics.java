@@ -103,7 +103,15 @@ public class FastMapScreenGraphics extends MapGraphics<MapScreen, ClientsideMap[
 
     @Override
     public MapGraphics<MapScreen, ClientsideMap[][]> copy() {
-        throw new UnsupportedOperationException();
+        final FastMapScreenGraphics copy = new FastMapScreenGraphics(this.width / 128, this.height / 128);
+        System.arraycopy(
+                this.getDirectAccessData(),
+                0,
+                copy.getDirectAccessData(),
+                0,
+                this.getDirectAccessData().length
+        );
+        return copy;
     }
 
     @Override

@@ -21,7 +21,8 @@ of <a href="https://github.com/cerus/packet-maps">packet-maps</a>.</p>
 
 ### Features
 
-> **Please note:** This is not a standalone plugin, it is a toolkit for other plugins. You will only be able to create and manage map screens with this plugin.
+> **Please note:** This is not a standalone plugin, it is a toolkit for other plugins. You will only be able to create and manage map screens with
+> this plugin.
 
 • Clientside maps\
 • Map screens (arrangement of clientside maps)\
@@ -46,7 +47,7 @@ See [FAQ](#FAQ)
     <dependency>
         <groupId>dev.cerus.maps</groupId>
         <artifactId>common</artifactId>
-        <version>1.0.7</version>
+        <version>2.0.1</version>
         <scope>provided</scope> <!-- "provided" if the maps plugin is on the server, "compile" if not -->
     </dependency>
 
@@ -55,7 +56,7 @@ See [FAQ](#FAQ)
     <dependency>
         <groupId>dev.cerus.maps</groupId>
         <artifactId>plugin</artifactId>
-        <version>1.0.7</version>
+        <version>2.0.1</version>
         <scope>provided</scope>
     </dependency>
 </dependencies>
@@ -64,6 +65,22 @@ See [FAQ](#FAQ)
 **Quickstart**
 
 ```java
+import dev.cerus.maps.api.ClientsideMap;
+import dev.cerus.maps.api.MapScreen;
+import dev.cerus.maps.api.graphics.ClientsideMapGraphics;
+import dev.cerus.maps.api.graphics.ColorCache;
+import dev.cerus.maps.api.graphics.MapGraphics;
+import dev.cerus.maps.plugin.map.MapScreenRegistry;
+import dev.cerus.maps.version.VersionAdapterFactory;
+import org.bukkit.Bukkit;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.MapMeta;
+import org.bukkit.map.MinecraftFont;
+import org.bukkit.plugin.java.JavaPlugin;
+
 public class MyPlugin extends JavaPlugin {
 
     @Override
@@ -76,10 +93,11 @@ public class MyPlugin extends JavaPlugin {
 
         this.getServer().getScheduler().runTaskTimerAsynchronously(this, () -> {
             for (final MapScreen screen : MapScreenRegistry.getScreens()) {
-                final MapScreenGraphics graphics = screen.getGraphics();
-                graphics.fill((byte) MapColor.WHITE_2.getId());
-                graphics.drawText(5, 5, "There are " + Bukkit.getOnlinePlayers().size() + " players on the server", (byte) MapColor.BLACK_2.getId(), 2);
-                screen.update(MapScreen.DirtyHandlingPolicy.IGNORE); // Send map screen to all online players
+                final MapGraphics<?, ?> graphics = screen.getGraphics();
+                graphics.fillComplete(ColorCache.rgbToMap(255, 255, 255)); // Convert rgb(255, 255, 255) to map color and fill the screen
+                graphics.drawText(5, 5, "There are " + Bukkit.getOnlinePlayers().size() + " players on the server", ColorCache.rgbToMap(0, 0, 0), 2);
+                screen.sendFrames(Bukkit.getOnlinePlayers().toArray(new Player[0])); // Send the screen frames to all online players
+                screen.sendMaps(true); // Send map data to all online players
             }
         }, 4 * 20, 20);
         getCommand("mapstest").setExecutor(this);
@@ -102,11 +120,15 @@ public class MyPlugin extends JavaPlugin {
         final MapMeta mapMeta = (MapMeta) item.getItemMeta();
         final int mapId = mapMeta.getMapView().getId();
 
-        final ClientsideMap clientsideMap = new ClientsideMap(mapId);
-        final ClientsideMapGraphics graphics = clientsideMap.getGraphics();
-        graphics.fill((byte) MapColor.BLACK_2.getId());
-        graphics.drawText(5, 5, "Hello,", (byte) MapColor.BLACK_2.getId(), 1);
-        graphics.drawText(5, 5 + MinecraftFont.Font.getHeight() + 5, player.getName(), (byte) MapColor.WHITE_2.getId(), 2);
+        final ClientsideMap clientsideMap = new ClientsideMap(mapId); // Create clientside map with given id
+        final ClientsideMapGraphics graphics = new ClientsideMapGraphics(); // Create graphics buffer
+
+        graphics.fillComplete(ColorCache.rgbToMap(0, 0, 0)); // Fill with rgb(0, 0, 0)
+        graphics.drawText(5, 5, "Hello,", ColorCache.rgbToMap(255, 255, 255), 1); // Draw text
+        graphics.drawText(5, 5 + MinecraftFont.Font.getHeight() + 5, player.getName(), ColorCache.rgbToMap(255, 255, 255), 2);
+
+        clientsideMap.draw(graphics); // Draw the buffer onto the map
+        clientsideMap.sendTo(new VersionAdapterFactory().makeAdapter(), player); // Send the map to the player
         return true;
     }
 
@@ -138,6 +160,8 @@ Please feel free to open an issue or contact me if you have any questions that w
 
 Thank you for your interest in contributing to this project! Before you do anything though please read the [contribution guidelines](CONTRIBUTING.md)
 thoroughly. Contributions that do not conform to the guidelines might be rejected.
+
+<hr>
 
 ### Sources
 

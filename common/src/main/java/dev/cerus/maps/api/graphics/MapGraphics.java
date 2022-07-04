@@ -913,6 +913,15 @@ public abstract class MapGraphics<C, P> {
      * Basically copies this buffer onto the buffer of the specified render target
      *
      * @param renderTarget The render target
+     */
+    public void renderOnto(final C renderTarget) {
+        this.renderOnto(renderTarget, null);
+    }
+
+    /**
+     * Basically copies this buffer onto the buffer of the specified render target
+     *
+     * @param renderTarget The render target
      * @param params       The render parameters
      */
     public abstract void renderOnto(C renderTarget, P params);

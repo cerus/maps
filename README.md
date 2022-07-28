@@ -47,7 +47,7 @@ See [FAQ](#FAQ)
     <dependency>
         <groupId>dev.cerus.maps</groupId>
         <artifactId>common</artifactId>
-        <version>2.0.1</version>
+        <version>2.0.2</version>
         <scope>provided</scope> <!-- "provided" if the maps plugin is on the server, "compile" if not -->
     </dependency>
 
@@ -56,7 +56,7 @@ See [FAQ](#FAQ)
     <dependency>
         <groupId>dev.cerus.maps</groupId>
         <artifactId>plugin</artifactId>
-        <version>2.0.1</version>
+        <version>2.0.2</version>
         <scope>provided</scope>
     </dependency>
 </dependencies>

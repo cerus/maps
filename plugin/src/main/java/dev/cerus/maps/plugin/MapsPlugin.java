@@ -31,17 +31,23 @@ public class MapsPlugin extends JavaPlugin {
             return;
         }
 
-        // Delayed map screen loading because loaded chunks do not
-        // contain entities right after startup for some weird reason
-        this.getServer().getScheduler().runTaskLater(this, () -> {
-            final FileConfiguration config = this.getConfig();
+        final FileConfiguration config = this.getConfig();
+        final Runnable load = () -> {
             if (config.contains("screens")) {
                 this.getLogger().info("Loading screens..");
                 MapScreenRegistry.load(config, versionAdapter);
                 this.getLogger().info(MapScreenRegistry.getScreenIds().size() + " screens were loaded");
             }
             this.areScreensLoaded = true;
-        }, mapsConfig.getInt("loading-delay", 3) * 20L);
+        };
+        if (!config.contains("version")) {
+            // Delayed map screen loading because loaded chunks do not
+            // contain entities right after startup for some weird reason
+            this.getServer().getScheduler().runTaskLater(this, load,
+                    mapsConfig.getInt("loading-delay", 3) * 20L);
+        } else {
+            load.run();
+        }
 
         final BukkitCommandManager commandManager = new BukkitCommandManager(this);
         commandManager.registerDependency(VersionAdapter.class, versionAdapter);

@@ -21,7 +21,7 @@ public class MapScreen {
     private final int width;
     private final int height;
     private MapGraphics<MapScreen, ClientsideMap[][]> graphics;
-    private int[][] frameIds;
+    private Frame[][] frames;
     private Location location;
 
     public MapScreen(final int id, final VersionAdapter versionAdapter, final int w, final int h) {
@@ -137,20 +137,58 @@ public class MapScreen {
      * @param players The receivers
      */
     public void sendFrames(final Player... players) {
-        if (this.frameIds == null) {
+        if (this.frames == null) {
             return;
         }
 
         for (int x = 0; x < this.width; x++) {
             for (int y = 0; y < this.height; y++) {
                 final ClientsideMap map = this.mapArray[x][y];
-                final int frameId = this.frameIds[x][y];
+                final int frameId = this.frames[x][y].getEntityId();
 
                 for (final Player player : players) {
-                    this.versionAdapter.sendPacket(player, this.versionAdapter.makeFramePacket(frameId, map));
+                    this.versionAdapter.sendPacket(player, this.versionAdapter.makeFramePacket(frameId, this.frames[x][y].isVisible(), map));
                 }
             }
         }
+    }
+
+    /**
+     * Spawn the frames
+     *
+     * @param players The receivers
+     */
+    public void spawnFrames(final Player... players) {
+        for (int x = 0; x < this.width; x++) {
+            for (int y = 0; y < this.height; y++) {
+                final ClientsideMap map = this.mapArray[x][y];
+                final int frameId = this.frames[x][y].getEntityId();
+
+                for (final Player player : players) {
+                    this.versionAdapter.sendPacket(player, this.versionAdapter.makeFrameSpawnPacket(this.frames[x][y]));
+                    this.versionAdapter.sendPacket(player, this.versionAdapter.makeFramePacket(frameId, this.frames[x][y].isVisible(), map));
+                }
+            }
+        }
+    }
+
+    /**
+     * Remove the frames
+     *
+     * @param players The receivers
+     */
+    public void despawnFrames(final Player... players) {
+        for (int x = 0; x < this.width; x++) {
+            for (int y = 0; y < this.height; y++) {
+                for (final Player player : players) {
+                    this.versionAdapter.sendPacket(player, this.versionAdapter.makeFrameDespawnPacket(this.frames[x][y]));
+                }
+            }
+        }
+    }
+
+    public void destroyFrames(final Player... players) {
+        this.despawnFrames(players);
     }
 
     public int getId() {
@@ -174,12 +212,27 @@ public class MapScreen {
         return this.graphics;
     }
 
-    public int[][] getFrameIds() {
-        return this.frameIds;
+    public Frame[][] getFrames() {
+        return this.frames;
     }
 
+    public void setFrames(final Frame[][] frames) {
+        this.frames = frames;
+    }
+
+    public int[][] getFrameIds() {
+        final int[][] frameIds = new int[this.width][this.height];
+        for (int x = 0; x < this.frames.length; x++) {
+            for (int y = 0; y < this.frames[x].length; y++) {
+                frameIds[x][y] = this.frames[x][y].getEntityId();
+            }
+        }
+        return frameIds;
+    }
+
+    @Deprecated
     public void setFrameIds(final int[][] frameIds) {
-        this.frameIds = frameIds;
+        //this.frameIds = frameIds;
     }
 
     public Collection<Marker> getMarkers() {
@@ -190,6 +243,11 @@ public class MapScreen {
     }
 
     public Location getLocation() {
+        if (this.location == null && this.frames != null
+                && this.frames.length > 0 && this.frames[0].length > 0) {
+            final Frame f = this.frames[0][0];
+            this.location = new Location(f.getWorld(), f.getPosX(), f.getPosY(), f.getPosZ());
+        }
         return this.location;
     }
 

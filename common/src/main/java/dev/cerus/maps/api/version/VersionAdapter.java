@@ -1,6 +1,7 @@
 package dev.cerus.maps.api.version;
 
 import dev.cerus.maps.api.ClientsideMap;
+import dev.cerus.maps.api.Frame;
 import org.bukkit.entity.Player;
 
 /**
@@ -26,7 +27,29 @@ public interface VersionAdapter {
      *
      * @return The new packet
      */
-    Object makeFramePacket(int frameId, ClientsideMap map);
+    Object makeFramePacket(int frameId, boolean visible, ClientsideMap map);
+
+    default Object makeFramePacket(final int frameId, final ClientsideMap map) {
+        return this.makeFramePacket(frameId, true, map);
+    }
+
+    /**
+     * Make a frame spawn packet
+     *
+     * @param frame The frame to spawn
+     *
+     * @return The spawn packet
+     */
+    Object makeFrameSpawnPacket(Frame frame);
+
+    /**
+     * Make a frame despawn packet
+     *
+     * @param frame The frame to despawn
+     *
+     * @return The despawn packet
+     */
+    Object makeFrameDespawnPacket(Frame frame);
 
     /**
      * Send a packet to a playe

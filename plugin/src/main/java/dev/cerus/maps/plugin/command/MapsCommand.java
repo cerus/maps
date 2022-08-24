@@ -5,6 +5,7 @@ import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Dependency;
 import co.aikar.commands.annotation.Subcommand;
+import dev.cerus.maps.api.Frame;
 import dev.cerus.maps.api.MapColor;
 import dev.cerus.maps.api.MapScreen;
 import dev.cerus.maps.api.Marker;
@@ -46,18 +47,26 @@ public class MapsCommand extends BaseCommand {
         }
 
         final EntityUtil.ItemFrameResult result = EntityUtil.getNearbyItemFrames(startingFrame, startingFrame.getFacing(), 20, 20);
-        final int[][] frameIds = new int[result.getWidth()][result.getHeight()];
+        final Frame[][] frames = new Frame[result.getWidth()][result.getHeight()];
         for (int x = 0; x < result.getWidth(); x++) {
             for (int y = 0; y < result.getHeight(); y++) {
                 final ItemFrame frame = result.getFrames()[x][y];
-                frameIds[x][result.getHeight() - 1 - y] = frame.getEntityId();
+                frames[x][result.getHeight() - 1 - y] = new Frame(
+                        frame.getWorld(),
+                        frame.getLocation().getBlockX(),
+                        frame.getLocation().getBlockY(),
+                        frame.getLocation().getBlockZ(),
+                        frame.getFacing(),
+                        frame.getEntityId(),
+                        frame.isVisible()
+                );
             }
         }
 
         final int id = MapScreenRegistry.getNextFreeId();
         final MapScreen mapScreen = new MapScreen(id, this.versionAdapter, result.getWidth(), result.getHeight());
         mapScreen.setLocation(startingFrame.getLocation());
-        mapScreen.setFrameIds(frameIds);
+        mapScreen.setFrames(frames);
         MapScreenRegistry.registerScreen(mapScreen);
         player.sendMessage("§aScreen §e#" + id + " §ahas been created!");
         this.handleTestScreen(player, id);

@@ -6,6 +6,7 @@ import dev.cerus.maps.api.graphics.MapScreenGraphics;
 import dev.cerus.maps.api.version.VersionAdapter;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.logging.Logger;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -233,6 +234,8 @@ public class MapScreen {
     @Deprecated
     public void setFrameIds(final int[][] frameIds) {
         //this.frameIds = frameIds;
+        Logger.getLogger("maps").warning("One of your plugin has called the deprecated MapScreen#setFrameIds() method.");
+        Logger.getLogger("maps").warning("Please update your plugins to maps v3!");
     }
 
     public Collection<Marker> getMarkers() {

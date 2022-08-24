@@ -28,7 +28,7 @@ of <a href="https://github.com/cerus/packet-maps">packet-maps</a>.</p>
 • Map screens (arrangement of clientside maps)\
 • Simple and reasonably lightweight\
 • Easy to use developer api\
-• Supports 1.16.5, 1.17.1, 1.18.1 and 1.18.2
+• Supports 1.16.5, 1.17.1, 1.18.1, 1.18.2, 1.19, 1.19.1 and 1.19.2
 
 **What is the point of the plugin module?**\
 See [FAQ](#FAQ)
@@ -96,7 +96,7 @@ public class MyPlugin extends JavaPlugin {
                 final MapGraphics<?, ?> graphics = screen.getGraphics();
                 graphics.fillComplete(ColorCache.rgbToMap(255, 255, 255)); // Convert rgb(255, 255, 255) to map color and fill the screen
                 graphics.drawText(5, 5, "There are " + Bukkit.getOnlinePlayers().size() + " players on the server", ColorCache.rgbToMap(0, 0, 0), 2);
-                screen.sendFrames(Bukkit.getOnlinePlayers().toArray(new Player[0])); // Send the screen frames to all online players
+                screen.spawnFrames(Bukkit.getOnlinePlayers().toArray(new Player[0])); // Send the screen frames to all online players
                 screen.sendMaps(true); // Send map data to all online players
             }
         }, 4 * 20, 20);
@@ -139,7 +139,7 @@ public class MyPlugin extends JavaPlugin {
 
 ### Building
 
-Requirements: Java 16, Git, Maven, Craftbukkit 1.16.5, 1.17.1, 1.18.1 and 1.18.2 installed in local Maven repo
+Requirements: Java 16, Git, Maven, Craftbukkit 1.16.5, 1.17.1, 1.18.1, 1.18.2 and 1.19.1 installed in local Maven repo
 
 Simply clone the repository, navigate into the directory and run `mvn clean package`. The plugin will be in `plugin/target` and the api
 in `common/target`.

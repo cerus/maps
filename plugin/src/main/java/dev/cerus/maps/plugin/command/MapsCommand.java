@@ -60,6 +60,7 @@ public class MapsCommand extends BaseCommand {
                         frame.getEntityId(),
                         frame.isVisible()
                 );
+                frame.remove();
             }
         }
 
@@ -93,7 +94,7 @@ public class MapsCommand extends BaseCommand {
         final int height = MinecraftFont.Font.getHeight() * 3;
         graphics.drawText((mapScreen.getWidth() * 128 / 2) - (width / 2), (mapScreen.getHeight() * 128 / 2) - (height / 2), text, (byte) MapColor.GRAY_3.getId(), 3);
 
-        mapScreen.sendFrames(player);
+        mapScreen.spawnFrames(player);
         mapScreen.sendMaps(true, player);
     }
 
@@ -135,7 +136,7 @@ public class MapsCommand extends BaseCommand {
         //canvas.drawRect(32, 0, canvas.getWidth() - 33, canvas.getHeight() - 1, ColorCache.rgbToMap(255, 0, 0));
         graphics.place(canvas, 64, 64);
 
-        mapScreen.sendFrames(player);
+        mapScreen.spawnFrames(player);
         mapScreen.sendMaps(false, player);
     }
 
@@ -181,7 +182,7 @@ public class MapsCommand extends BaseCommand {
                 ColorCache.rgbToMap(0, 255, 0),
                 1f
         );*/
-        mapScreen.sendFrames(player);
+        mapScreen.spawnFrames(player);
         mapScreen.sendMaps(false, player);
     }
 
@@ -294,7 +295,7 @@ public class MapsCommand extends BaseCommand {
         player.sendMessage(String.format("Compute took %d ns (%.4f ms)", nanoDiff, ((double) nanoDiff) / TimeUnit.MILLISECONDS.toNanos(1)));
 
         nanoBefore = System.nanoTime();
-        mapScreen.sendFrames(player);
+        mapScreen.spawnFrames(player);
         mapScreen.sendMaps(false, player);
         nanoAfter = System.nanoTime();
 

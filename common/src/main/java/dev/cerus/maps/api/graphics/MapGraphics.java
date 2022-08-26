@@ -960,9 +960,7 @@ public abstract class MapGraphics<C, P> {
     }
 
     public int index(final int x, final int y, final int w, final int h) {
-        final int a = w >= h ? x : y;
-        final int b = w >= h ? y : x;
-        return a + b * Math.max(w, h);
+        return x + y * Math.max(w, h);
     }
 
 }

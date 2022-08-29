@@ -308,10 +308,9 @@ public abstract class MapGraphics<C, P> {
         } else {
             for (int ox = 0; ox < graphics.getWidth(); ox++) {
                 for (int oy = 0; oy < graphics.getHeight(); oy++) {
-                    if (ignoreTransparent && this.isTransparent(graphics.getPixel(ox, oy))) {
-                        continue;
+                    if (!ignoreTransparent || !this.isTransparent(graphics.getPixel(ox, oy))) {
+                        this.setPixel(x + ox, y + oy, alpha, graphics.getPixel(ox, oy));
                     }
-                    this.setPixel(x + ox, y + oy, alpha, graphics.getPixel(ox, oy));
                 }
             }
         }
@@ -835,9 +834,9 @@ public abstract class MapGraphics<C, P> {
      * @return The composited color
      */
     protected byte calculateComposite(final byte source, final byte dest, final float alpha) {
-        if (alpha == 0f) {
+        if (alpha <= 0f) {
             return dest;
-        } else if (alpha == 1f) {
+        } else if (alpha >= 1f) {
             return source;
         } else {
             if (this.isTransparent(source)) {
@@ -847,14 +846,16 @@ public abstract class MapGraphics<C, P> {
                 return source;
             }
 
-            final Color newColor = MapColor.mapColorToRgb(source);
-            final Color oldColor = MapColor.mapColorToRgb(dest);
-            final int[] compositedColor = new int[] {
-                    this.composite(newColor.getRed(), oldColor.getRed(), alpha),
-                    this.composite(newColor.getGreen(), oldColor.getGreen(), alpha),
-                    this.composite(newColor.getBlue(), oldColor.getBlue(), alpha)
-            };
-            return ColorCache.rgbToMap(compositedColor[0], compositedColor[1], compositedColor[2]);
+            return CompositeColorCache.getCompositeOrCompute(source, dest, alpha, () -> {
+                final Color newColor = MapColor.mapColorToRgb(source);
+                final Color oldColor = MapColor.mapColorToRgb(dest);
+                final int[] compositedColor = new int[] {
+                        this.composite(newColor.getRed(), oldColor.getRed(), alpha),
+                        this.composite(newColor.getGreen(), oldColor.getGreen(), alpha),
+                        this.composite(newColor.getBlue(), oldColor.getBlue(), alpha)
+                };
+                return ColorCache.rgbToMap(compositedColor[0], compositedColor[1], compositedColor[2]);
+            });
         }
     }
 

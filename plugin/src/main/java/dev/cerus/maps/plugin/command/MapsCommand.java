@@ -10,16 +10,22 @@ import dev.cerus.maps.api.MapColor;
 import dev.cerus.maps.api.MapScreen;
 import dev.cerus.maps.api.Marker;
 import dev.cerus.maps.api.graphics.ColorCache;
+import dev.cerus.maps.api.graphics.CompositeColorCache;
 import dev.cerus.maps.api.graphics.FunctionalMapGraphics;
 import dev.cerus.maps.api.graphics.MapGraphics;
 import dev.cerus.maps.api.graphics.StandaloneMapGraphics;
 import dev.cerus.maps.api.version.VersionAdapter;
 import dev.cerus.maps.plugin.map.MapScreenRegistry;
 import dev.cerus.maps.util.EntityUtil;
+import java.awt.Color;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.concurrent.TimeUnit;
+import javax.imageio.ImageIO;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.Player;
@@ -301,6 +307,56 @@ public class MapsCommand extends BaseCommand {
 
         nanoDiff = nanoAfter - nanoBefore;
         player.sendMessage(String.format("Send took %d ns (%.4f ms)", nanoDiff, ((double) nanoDiff) / TimeUnit.MILLISECONDS.toNanos(1)));
+    }
+
+    @Subcommand("debugscreen alphabench")
+    @CommandPermission("maps.command.debugscreen")
+    public void handleDebugScreenAlphaBench(final Player player, final int id, final float a) {
+        final MapScreen mapScreen = MapScreenRegistry.getScreen(id);
+        if (mapScreen == null) {
+            player.sendMessage("§cScreen not found");
+            return;
+        }
+
+        final MapGraphics<?, ?> img;
+        try {
+            final BufferedImage image = ImageIO.read(new URL("https://cerus.dev/img/edina_lang_logo.png"));
+            img = StandaloneMapGraphics.newGraphicsObject(image.getWidth(), image.getHeight());
+            for (int x = 0; x < image.getWidth(); x++) {
+                for (int y = 0; y < image.getHeight(); y++) {
+                    final int rgb = image.getRGB(x, y);
+                    final Color color = new Color(rgb, image.getColorModel().hasAlpha());
+                    img.setPixel(x, y, ColorCache.rgbToMap(
+                            color.getRed(),
+                            color.getGreen(),
+                            color.getBlue()
+                    ));
+                }
+            }
+        } catch (final IOException ignored) {
+            player.sendMessage("§cError");
+            return;
+        }
+
+        long nanoBefore = System.nanoTime();
+
+        final MapGraphics<?, ?> graphics = mapScreen.getGraphics();
+        graphics.fillComplete(ColorCache.rgbToMap(0, 255, 0));
+        mapScreen.clearMarkers();
+        graphics.place(img, (graphics.getWidth() / 2) - (img.getWidth() / 2), (graphics.getHeight() / 2) - (img.getHeight() / 2), a);
+
+        long nanoAfter = System.nanoTime();
+        long nanoDiff = nanoAfter - nanoBefore;
+        player.sendMessage(String.format("Compute took %d ns (%.4f ms)", nanoDiff, ((double) nanoDiff) / TimeUnit.MILLISECONDS.toNanos(1)));
+
+        nanoBefore = System.nanoTime();
+        mapScreen.spawnFrames(player);
+        mapScreen.sendMaps(false, player);
+        nanoAfter = System.nanoTime();
+
+        nanoDiff = nanoAfter - nanoBefore;
+        player.sendMessage(String.format("Send took %d ns (%.4f ms)", nanoDiff, ((double) nanoDiff) / TimeUnit.MILLISECONDS.toNanos(1)));
+        player.sendMessage("Composition cache: %d".formatted(CompositeColorCache.size()));
     }
 
     @Subcommand("removescreen")

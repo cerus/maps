@@ -8,7 +8,10 @@ import java.util.Comparator;
  * Color data pulled from the Minecraft wiki
  * <p>
  * I tried to name the colors as good as possible but the naming still kind of sucks, I'm sorry
+ *
+ * @deprecated Use {@link dev.cerus.maps.api.colormap.ColorMap} and {@link dev.cerus.maps.api.colormap.ColorMaps} instead
  */
+@Deprecated
 public enum MapColor {
 
     TRANSPARENT_0(0, null),

@@ -1,6 +1,6 @@
 package dev.cerus.maps.api.graphics;
 
-import dev.cerus.maps.api.MapColor;
+import dev.cerus.maps.api.colormap.ColorMaps;
 import dev.cerus.maps.api.graphics.filter.BoxBlurFilter;
 import dev.cerus.maps.api.graphics.filter.Filter;
 import dev.cerus.maps.api.graphics.filter.GrayscaleFilter;
@@ -847,8 +847,10 @@ public abstract class MapGraphics<C, P> {
             }
 
             return CompositeColorCache.getCompositeOrCompute(source, dest, alpha, () -> {
-                final Color newColor = MapColor.mapColorToRgb(source);
-                final Color oldColor = MapColor.mapColorToRgb(dest);
+                //final Color newColor = MapColor.mapColorToRgb(source);
+                //final Color oldColor = MapColor.mapColorToRgb(dest);
+                final Color newColor = ColorMaps.current().mapColorToRgb(source);
+                final Color oldColor = ColorMaps.current().mapColorToRgb(dest);
                 final int[] compositedColor = new int[] {
                         this.composite(newColor.getRed(), oldColor.getRed(), alpha),
                         this.composite(newColor.getGreen(), oldColor.getGreen(), alpha),

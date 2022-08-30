@@ -6,7 +6,6 @@ import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Dependency;
 import co.aikar.commands.annotation.Subcommand;
 import dev.cerus.maps.api.Frame;
-import dev.cerus.maps.api.MapColor;
 import dev.cerus.maps.api.MapScreen;
 import dev.cerus.maps.api.Marker;
 import dev.cerus.maps.api.graphics.ColorCache;
@@ -89,16 +88,16 @@ public class MapsCommand extends BaseCommand {
         }
 
         final MapGraphics<?, ?> graphics = mapScreen.getGraphics();
-        graphics.fillComplete((byte) MapColor.WHITE_2.getId());
+        graphics.fillComplete((byte) 34);
         //graphics.fill((byte) 0);
-        graphics.drawRect(0, 0, mapScreen.getWidth() * 128 - 1, mapScreen.getHeight() * 128 - 1, (byte) MapColor.BLACK_2.getId(), 1f);
-        graphics.drawLine(1, 1, mapScreen.getWidth() * 128 - 2, mapScreen.getHeight() * 128 - 2, (byte) MapColor.BLACK_2.getId(), 1f);
-        graphics.drawLine(1, mapScreen.getHeight() * 128 - 2, mapScreen.getWidth() * 128 - 2, 1, (byte) MapColor.BLACK_2.getId(), 1f);
+        graphics.drawRect(0, 0, mapScreen.getWidth() * 128 - 1, mapScreen.getHeight() * 128 - 1, (byte) 118, 1f);
+        graphics.drawLine(1, 1, mapScreen.getWidth() * 128 - 2, mapScreen.getHeight() * 128 - 2, (byte) 118, 1f);
+        graphics.drawLine(1, mapScreen.getHeight() * 128 - 2, mapScreen.getWidth() * 128 - 2, 1, (byte) 118, 1f);
 
         final String text = "#" + id;
         final int width = MinecraftFont.Font.getWidth(text) * 3;
         final int height = MinecraftFont.Font.getHeight() * 3;
-        graphics.drawText((mapScreen.getWidth() * 128 / 2) - (width / 2), (mapScreen.getHeight() * 128 / 2) - (height / 2), text, (byte) MapColor.GRAY_3.getId(), 3);
+        graphics.drawText((mapScreen.getWidth() * 128 / 2) - (width / 2), (mapScreen.getHeight() * 128 / 2) - (height / 2), text, (byte) 15, 3);
 
         mapScreen.spawnFrames(player);
         mapScreen.sendMaps(true, player);

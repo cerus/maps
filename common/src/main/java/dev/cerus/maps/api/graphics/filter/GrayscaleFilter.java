@@ -1,6 +1,6 @@
 package dev.cerus.maps.api.graphics.filter;
 
-import dev.cerus.maps.api.MapColor;
+import dev.cerus.maps.api.colormap.ColorMaps;
 import dev.cerus.maps.api.graphics.ColorCache;
 import dev.cerus.maps.api.graphics.MapGraphics;
 import java.awt.Color;
@@ -13,7 +13,8 @@ public class GrayscaleFilter implements Filter {
         if (graphics.isTransparent(pixel)) {
             return pixel;
         }
-        final Color color = MapColor.mapColorToRgb(pixel);
+        //final Color color = MapColor.mapColorToRgb(pixel);
+        final Color color = ColorMaps.current().mapColorToRgb(pixel);
         if (color == null) {
             return pixel;
         }

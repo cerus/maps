@@ -3,3 +3,7 @@ version: ${parent.version}
 main: dev.cerus.maps.plugin.MapsPlugin
 author: Cerus
 api-version: 1.16
+
+softdepend:
+  - Multiverse-Core
+  - SuperiorSkyblock2

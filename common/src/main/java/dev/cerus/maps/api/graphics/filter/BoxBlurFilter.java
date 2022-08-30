@@ -1,6 +1,6 @@
 package dev.cerus.maps.api.graphics.filter;
 
-import dev.cerus.maps.api.MapColor;
+import dev.cerus.maps.api.colormap.ColorMaps;
 import dev.cerus.maps.api.graphics.ColorCache;
 import dev.cerus.maps.api.graphics.MapGraphics;
 import java.awt.Color;
@@ -86,7 +86,8 @@ public class BoxBlurFilter implements Filter {
                 throw new KeepOriginalSignal();
             }
         }
-        return MapColor.mapColorToRgb(color).getRGB();
+        //return MapColor.mapColorToRgb(color).getRGB();
+        return ColorMaps.current().mapColorToRgb(color).getRGB();
     }
 
     @Override

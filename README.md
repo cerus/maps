@@ -28,7 +28,7 @@ of <a href="https://github.com/cerus/packet-maps">packet-maps</a>.</p>
 • Map screens (arrangement of clientside maps)\
 • Simple and reasonably lightweight\
 • Easy to use developer api\
-• Advanced engine features like [alpha compositing](https://cerus.dev/img/maps_alpha_composition.png)\
+• Advanced engine features like [alpha compositing](https://en.wikipedia.org/wiki/Alpha_compositing) ([Image](https://cerus.dev/img/maps_alpha_composition.png))\
 • Supports 1.16.5, 1.17.1, 1.18.1, 1.18.2, 1.19, 1.19.1 and 1.19.2
 
 **What is the point of the plugin module?**\

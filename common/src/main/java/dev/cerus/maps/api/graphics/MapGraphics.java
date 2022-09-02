@@ -317,7 +317,7 @@ public abstract class MapGraphics<C, P> {
     }
 
     /**
-     * Perform box blur on a rectangular area
+     * Grayscale a rectangular area
      *
      * @param x      X coordinate
      * @param y      Y coordinate

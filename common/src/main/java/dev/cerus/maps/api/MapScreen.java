@@ -4,6 +4,7 @@ import dev.cerus.maps.api.graphics.FastMapScreenGraphics;
 import dev.cerus.maps.api.graphics.MapGraphics;
 import dev.cerus.maps.api.graphics.MapScreenGraphics;
 import dev.cerus.maps.api.version.VersionAdapter;
+import dev.cerus.maps.util.HitBoxCalculatorUtil;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.logging.Logger;
@@ -21,6 +22,7 @@ public class MapScreen {
     private final ClientsideMap[][] mapArray;
     private final int width;
     private final int height;
+    private HitBox hitBox;
     private MapGraphics<MapScreen, ClientsideMap[][]> graphics;
     private Frame[][] frames;
     private Location location;
@@ -67,10 +69,10 @@ public class MapScreen {
      * @param marker The marker to remove
      */
     public void removeMarker(final Marker marker) {
-        final int arrX = marker.getX() / 128;
-        final int arrY = marker.getY() / 128;
+        final int arrX = marker.getX() / 256;
+        final int arrY = marker.getY() / 256;
         if (arrX < this.width && arrY < this.height) {
-            this.mapArray[arrX][arrY].addMarker(marker);
+            this.mapArray[arrX][arrY].removeMarker(marker);
         }
     }
 
@@ -124,6 +126,29 @@ public class MapScreen {
                 }
 
                 final Object packet = this.versionAdapter.makeMapPacket(full, map);
+                for (final Player player : players) {
+                    this.versionAdapter.sendPacket(player, packet);
+                }
+                map.setDirtyMarkers(false);
+            }
+        }
+    }
+
+    public void sendMarkers(final Player... players) {
+        for (int x = 0; x < this.width; x++) {
+            for (int y = 0; y < this.height; y++) {
+                final ClientsideMap map = this.mapArray[x][y];
+                // If bounds are zero there are no changes
+                if (!map.hasDirtyMarkers()) {
+                    continue;
+                }
+
+                map.setX(0);
+                map.setY(0);
+                map.setWidth(0);
+                map.setHeight(0);
+
+                final Object packet = this.versionAdapter.makeMapPacket(false, map);
                 for (final Player player : players) {
                     this.versionAdapter.sendPacket(player, packet);
                 }
@@ -219,6 +244,7 @@ public class MapScreen {
 
     public void setFrames(final Frame[][] frames) {
         this.frames = frames;
+        this.calculateHitBox();
     }
 
     public int[][] getFrameIds() {
@@ -256,6 +282,31 @@ public class MapScreen {
 
     public void setLocation(final Location location) {
         this.location = location;
+    }
+
+    /**
+     * Recalculate the hit box of this screen
+     */
+    public void calculateHitBox() {
+        this.hitBox = HitBoxCalculatorUtil.calculateHitBox(this);
+    }
+
+    public HitBox getHitBox() {
+        return this.hitBox;
+    }
+
+    public void setHitBox(final HitBox hitBox) {
+        this.hitBox = hitBox;
+    }
+
+    public record HitBox(Location bottomLeft, Location topRight) {
+
+        public boolean contains(final Location loc) {
+            return (loc.getX() >= Math.min(this.bottomLeft.getX(), this.topRight.getX()) && loc.getX() <= Math.max(this.bottomLeft.getX(), this.topRight.getX()))
+                    && (loc.getY() >= Math.min(this.bottomLeft.getY(), this.topRight.getY()) && loc.getY() <= Math.max(this.bottomLeft.getY(), this.topRight.getY()))
+                    && (loc.getZ() >= Math.min(this.bottomLeft.getZ(), this.topRight.getZ()) && loc.getZ() <= Math.max(this.bottomLeft.getZ(), this.topRight.getZ()));
+        }
+
     }
 
 }

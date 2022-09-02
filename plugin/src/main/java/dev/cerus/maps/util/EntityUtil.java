@@ -1,5 +1,6 @@
 package dev.cerus.maps.util;
 
+import dev.cerus.maps.plugin.dev.DevContext;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -40,9 +41,11 @@ public class EntityUtil {
                 widthVector = new Vector(0, 0, 1);
                 break;
             case UP:
-                widthVector = new Vector(1, 0, 0);
-                heightVector = new Vector(0, 0, -1);
-                break;
+                if (DevContext.ENABLED) {
+                    widthVector = new Vector(1, 0, 0);
+                    heightVector = new Vector(0, 0, -1);
+                    break;
+                }
             default:
                 return new ItemFrameResult(new ItemFrame[0][0], 0, 0);
         }

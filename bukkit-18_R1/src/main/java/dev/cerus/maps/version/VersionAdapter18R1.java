@@ -2,6 +2,7 @@ package dev.cerus.maps.version;
 
 import dev.cerus.maps.api.ClientsideMap;
 import dev.cerus.maps.api.Frame;
+import dev.cerus.maps.api.version.PacketListener;
 import dev.cerus.maps.api.version.VersionAdapter;
 import dev.cerus.maps.util.ReflectionUtil;
 import java.util.Arrays;
@@ -27,6 +28,7 @@ import org.bukkit.craftbukkit.v1_18_R1.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v1_18_R1.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.meta.MapMeta;
+import org.bukkit.plugin.java.JavaPlugin;
 
 public class VersionAdapter18R1 implements VersionAdapter {
 
@@ -34,8 +36,8 @@ public class VersionAdapter18R1 implements VersionAdapter {
     public Object makeMapPacket(final boolean ignoreBounds, final ClientsideMap map) {
         final int x = ignoreBounds ? 0 : map.getX();
         final int y = ignoreBounds ? 0 : map.getY();
-        final int w = ignoreBounds ? 128 : map.getWidth();
-        final int h = ignoreBounds ? 128 : map.getHeight();
+        final int w = ignoreBounds ? 128 : Math.max(1, map.getWidth());
+        final int h = ignoreBounds ? 128 : Math.max(1, map.getHeight());
 
         final byte[] data;
         if (ignoreBounds) {
@@ -59,7 +61,7 @@ public class VersionAdapter18R1 implements VersionAdapter {
                                 cursor.getCompressedX(),
                                 cursor.getCompressedY(),
                                 cursor.getDirection(),
-                                IChatBaseComponent.ChatSerializer.a(cursor.getCaptionString())
+                                !cursor.hasCaption() ? null : IChatBaseComponent.ChatSerializer.a(cursor.getCaptionString())
                         ))
                         .collect(Collectors.toList()),
                 new WorldMap.b(
@@ -132,6 +134,12 @@ public class VersionAdapter18R1 implements VersionAdapter {
     @Override
     public void sendPacket(final Player player, final Object packet) {
         ((CraftPlayer) player).getHandle().b.a((Packet<?>) packet);
+    }
+
+    @Override
+    public void inject(final Player player, final PacketListener listener, final JavaPlugin plugin) {
+        ((CraftPlayer) player).getHandle().b.a().k.pipeline()
+                .addBefore("packet_handler", "maps_listener", new PacketHandler18R1(player, listener, plugin));
     }
 
 }

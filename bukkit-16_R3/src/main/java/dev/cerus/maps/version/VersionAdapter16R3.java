@@ -2,6 +2,7 @@ package dev.cerus.maps.version;
 
 import dev.cerus.maps.api.ClientsideMap;
 import dev.cerus.maps.api.Frame;
+import dev.cerus.maps.api.version.PacketListener;
 import dev.cerus.maps.api.version.VersionAdapter;
 import dev.cerus.maps.util.ReflectionUtil;
 import java.util.Arrays;
@@ -26,6 +27,7 @@ import org.bukkit.craftbukkit.v1_16_R3.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v1_16_R3.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.meta.MapMeta;
+import org.bukkit.plugin.java.JavaPlugin;
 
 public class VersionAdapter16R3 implements VersionAdapter {
 
@@ -114,6 +116,12 @@ public class VersionAdapter16R3 implements VersionAdapter {
     @Override
     public void sendPacket(final Player player, final Object packet) {
         ((CraftPlayer) player).getHandle().playerConnection.sendPacket((Packet<?>) packet);
+    }
+
+    @Override
+    public void inject(final Player player, final PacketListener listener, final JavaPlugin plugin) {
+        ((CraftPlayer) player).getHandle().playerConnection.a().channel.pipeline()
+                .addBefore("packet_handler", "maps_listener", new PacketHandler16R3(player, listener, plugin));
     }
 
 }

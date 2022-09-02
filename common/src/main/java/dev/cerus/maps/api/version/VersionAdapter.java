@@ -3,6 +3,7 @@ package dev.cerus.maps.api.version;
 import dev.cerus.maps.api.ClientsideMap;
 import dev.cerus.maps.api.Frame;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
 
 /**
  * Interface for version specific code
@@ -58,5 +59,13 @@ public interface VersionAdapter {
      * @param packet The packet
      */
     void sendPacket(Player player, Object packet);
+
+    /**
+     * Inject a packet listener into the players connection
+     *
+     * @param player   The player to inject
+     * @param listener The listener
+     */
+    void inject(Player player, PacketListener listener, JavaPlugin plugin);
 
 }

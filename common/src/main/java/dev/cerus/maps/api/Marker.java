@@ -1,5 +1,7 @@
 package dev.cerus.maps.api;
 
+import java.util.Arrays;
+import java.util.Objects;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.chat.ComponentSerializer;
 import org.bukkit.map.MapCursor;
@@ -148,6 +150,26 @@ public class Marker {
 
     void setParent(final ClientsideMap parent) {
         this.parent = parent;
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || this.getClass() != o.getClass()) {
+            return false;
+        }
+        final Marker marker = (Marker) o;
+        return this.getX() == marker.getX() && this.getY() == marker.getY() && this.getDirection() == marker.getDirection()
+                && this.getType() == marker.getType() && this.isVisible() == marker.isVisible() && Arrays.equals(this.getCaption(), marker.getCaption());
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hash(this.getX(), this.getY(), this.getDirection(), this.getType(), this.isVisible());
+        result = 31 * result + Arrays.hashCode(this.getCaption());
+        return result;
     }
 
 }

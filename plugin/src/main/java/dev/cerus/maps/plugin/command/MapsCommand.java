@@ -20,12 +20,16 @@ import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URL;
-import java.util.Arrays;
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import javax.imageio.ImageIO;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.ComponentBuilder;
+import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
+import net.md_5.bungee.api.chat.hover.content.Text;
 import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.Player;
 import org.bukkit.map.MapCursor;
@@ -39,6 +43,12 @@ public class MapsCommand extends BaseCommand {
     private VersionAdapter versionAdapter;
 
     @Subcommand("createscreen")
+    @CommandPermission("maps.command.createscreen")
+    public void handleOldCreateScreen(final Player player) {
+        this.handleCreateScreen(player);
+    }
+
+    @Subcommand("screen create")
     @CommandPermission("maps.command.createscreen")
     public void handleCreateScreen(final Player player) {
         final ItemFrame startingFrame = player.getNearbyEntities(10, 10, 10).stream()
@@ -78,7 +88,7 @@ public class MapsCommand extends BaseCommand {
         this.handleTestScreen(player, id);
     }
 
-    @Subcommand("testscreen")
+    @Subcommand("screen test")
     @CommandPermission("maps.command.testscreen")
     public void handleTestScreen(final Player player, final int id) {
         final MapScreen mapScreen = MapScreenRegistry.getScreen(id);
@@ -358,22 +368,33 @@ public class MapsCommand extends BaseCommand {
         player.sendMessage("Composition cache: %d".formatted(CompositeColorCache.size()));
     }
 
-    @Subcommand("removescreen")
+    @Subcommand("screen remove")
     @CommandPermission("maps.command.removescreen")
     public void handleRemoveScreen(final Player player, final int id) {
         MapScreenRegistry.removeScreen(id);
         player.sendMessage("§aScreen was removed");
     }
 
-    @Subcommand("listscreens")
+    @Subcommand("screen list")
     @CommandPermission("maps.command.listscreens")
     public void handleListScreens(final Player player) {
-        final Collection<Integer> screenIds = MapScreenRegistry.getScreenIds();
+        final List<Integer> screenIds = new ArrayList<>(MapScreenRegistry.getScreenIds());
         player.sendMessage("§6There are " + screenIds.size() + " map screens on this server");
-        player.sendMessage("§e" + Arrays.toString(screenIds.toArray(new Integer[0])));
+        final ComponentBuilder listBuilder = new ComponentBuilder("§e[");
+        for (int i = 0; i < screenIds.size(); i++) {
+            final int screenId = screenIds.get(i);
+            final boolean last = i == screenIds.size() - 1;
+            listBuilder.append(new ComponentBuilder("§e" + screenId + (last ? "" : ", "))
+                    .retain(ComponentBuilder.FormatRetention.NONE)
+                    .event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("§7Click to run §f/maps screen info " + screenId)))
+                    .event(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/maps screen info " + screenId))
+                    .create());
+        }
+        listBuilder.append("§e]");
+        player.spigot().sendMessage(listBuilder.create());
     }
 
-    @Subcommand("info")
+    @Subcommand("screen info")
     @CommandPermission("maps.command.info")
     public void handleInfo(final Player player, final int id) {
         final MapScreen screen = MapScreenRegistry.getScreen(id);
@@ -383,6 +404,15 @@ public class MapsCommand extends BaseCommand {
         }
 
         player.sendMessage("§7Screen §b#" + id + " §7(" + screen.getWidth() + "x" + screen.getHeight() + ")");
+        if (screen.getLocation() != null) {
+            player.spigot().sendMessage(new ComponentBuilder("§8[§eTeleport§8]")
+                    .event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("§7Click to teleport")))
+                    .event(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/minecraft:tp %s %f %f %f".formatted(
+                            player.getName(), screen.getLocation().getX(),
+                            screen.getLocation().getY(), screen.getLocation().getZ()
+                    )))
+                    .create());
+        }
     }
 
 }

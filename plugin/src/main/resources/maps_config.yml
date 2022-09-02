@@ -1,1 +1,3 @@
 loading-delay: 3
+enable-click-listener: false
+max-click-dist: 10.0

@@ -3,6 +3,10 @@ package dev.cerus.maps.plugin;
 import co.aikar.commands.BukkitCommandManager;
 import dev.cerus.maps.api.version.VersionAdapter;
 import dev.cerus.maps.plugin.command.MapsCommand;
+import dev.cerus.maps.plugin.dev.DevContext;
+import dev.cerus.maps.plugin.dev.DevListener;
+import dev.cerus.maps.plugin.dev.MapsDevCommand;
+import dev.cerus.maps.plugin.listener.PlayerListener;
 import dev.cerus.maps.plugin.map.MapScreenRegistry;
 import dev.cerus.maps.version.VersionAdapterFactory;
 import java.io.File;
@@ -52,6 +56,17 @@ public class MapsPlugin extends JavaPlugin {
         final BukkitCommandManager commandManager = new BukkitCommandManager(this);
         commandManager.registerDependency(VersionAdapter.class, versionAdapter);
         commandManager.registerCommand(new MapsCommand());
+
+        if (mapsConfig.getBoolean("enable-click-listener", false)) {
+            this.getServer().getPluginManager().registerEvents(new PlayerListener(versionAdapter,
+                    mapsConfig.getDouble("max-click-dist", 10d)), this);
+        }
+
+        if (DevContext.ENABLED) {
+            this.getLogger().info("You are running maps in a development environment");
+            commandManager.registerCommand(new MapsDevCommand());
+            this.getServer().getPluginManager().registerEvents(new DevListener(this), this);
+        }
     }
 
     @Override

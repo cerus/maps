@@ -1,6 +1,8 @@
 package dev.cerus.maps.plugin;
 
 import co.aikar.commands.BukkitCommandManager;
+import dev.cerus.maps.api.colormap.ColorMaps;
+import dev.cerus.maps.api.font.MapFont;
 import dev.cerus.maps.api.version.VersionAdapter;
 import dev.cerus.maps.plugin.command.MapsCommand;
 import dev.cerus.maps.plugin.dev.DevContext;
@@ -67,6 +69,9 @@ public class MapsPlugin extends JavaPlugin {
             commandManager.registerCommand(new MapsDevCommand());
             this.getServer().getPluginManager().registerEvents(new DevListener(this), this);
         }
+
+        // Force classes to initialize now
+        this.doNothing(ColorMaps.class, MapFont.class);
     }
 
     @Override
@@ -75,6 +80,11 @@ public class MapsPlugin extends JavaPlugin {
             MapScreenRegistry.store(this.getConfig());
         }
         this.saveConfig();
+    }
+
+    private void doNothing(final Class<?>... unused) {
+        // This method does nothing. Its only purpose is to trick the JVM into
+        // initializing the passed classes.
     }
 
 }

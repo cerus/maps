@@ -6,11 +6,20 @@ import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Conditions;
 import co.aikar.commands.annotation.Dependency;
 import co.aikar.commands.annotation.Subcommand;
+import dev.cerus.maps.api.ClientsideMap;
 import dev.cerus.maps.api.MapScreen;
 import dev.cerus.maps.api.Marker;
+import dev.cerus.maps.api.font.FontConverter;
+import dev.cerus.maps.api.font.MapFont;
+import dev.cerus.maps.api.graphics.ColorCache;
+import dev.cerus.maps.api.graphics.MapGraphics;
 import dev.cerus.maps.api.version.VersionAdapter;
+import dev.cerus.maps.plugin.MapsPlugin;
 import dev.cerus.maps.plugin.map.MapScreenRegistry;
 import dev.cerus.maps.raycast.RayCastUtil;
+import java.awt.Font;
+import java.io.File;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Executors;
@@ -19,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import org.bukkit.map.MapCursor;
+import org.bukkit.plugin.java.JavaPlugin;
 
 /**
  * Special command for development operations, do not use in production
@@ -29,6 +39,43 @@ public class MapsDevCommand extends BaseCommand {
 
     @Dependency
     private VersionAdapter versionAdapter;
+
+    @Subcommand("fonttest")
+    public void handleFontTest(final Player player, final int screenId, final String fontName, final int fontSize, String text) {
+        final MapScreen screen = MapScreenRegistry.getScreen(screenId);
+        if (screen == null || !fontName.matches("[A-Za-z0-9]+")) {
+            return;
+        }
+
+        final MapFont mapFont;
+        try {
+            final Font font = Font.createFont(Font.TRUETYPE_FONT, new File(JavaPlugin.getPlugin(MapsPlugin.class).getDataFolder(), fontName + ".ttf"))
+                    .deriveFont((float) fontSize);
+            mapFont = FontConverter.convert(font, FontConverter.ASCII + FontConverter.UMLAUTS + FontConverter.SHARP_S + " ");
+        } catch (final Throwable t) {
+            t.printStackTrace();
+            player.sendMessage("Error " + t.getMessage());
+            return;
+        }
+
+        final MapGraphics<MapScreen, ClientsideMap[][]> graphics = screen.getGraphics();
+        graphics.fillComplete((byte) 0);
+        text = text.replace("\\n", "\n");
+        final int width = Arrays.stream(text.split("\n")).mapToInt(mapFont::getWidth).max().orElse(0);
+        final int height = Arrays.stream(text.split("\n")).mapToInt(mapFont::getHeight).sum();
+        graphics.drawText(
+                (graphics.getWidth() / 2) - (width / 2),
+                (graphics.getHeight() / 2) - (height / 2),
+                text,
+                mapFont,
+                ColorCache.rgbToMap(255, 255, 255),
+                1
+        );
+        screen.sendMaps(true);
+
+        player.sendMessage("W: " + width);
+        player.sendMessage("H: " + height);
+    }
 
     @Subcommand("raytesttask")
     public void handleRayTestTask(final Player player) {

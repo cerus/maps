@@ -7,66 +7,113 @@ import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.List;
 import java.util.stream.IntStream;
-import org.bukkit.map.MapFont;
 
+/**
+ * Converts regular Java fonts into MapFonts
+ */
 public class FontConverter {
 
-    public static final List<Character> ASCII = List.copyOf(IntStream.range(26, 127)
+    /**
+     * All Ascii chars
+     */
+    public static final String ASCII = IntStream.range(26, 127)
             .mapToObj(v -> (char) v)
-            .toList());
-    public static final List<Character> UNICODE = List.copyOf(IntStream.range(0, Character.MAX_VALUE)
-            .filter(value -> Character.isDefined((char) value))
-            .mapToObj(v -> (char) v)
-            .toList());
+            .collect(StringBuilder::new, StringBuilder::append, StringBuilder::append)
+            .toString();
+
+    /**
+     * All German umlauts
+     */
+    public static final String UMLAUTS = "ÄäÖöÜü";
+
+    /**
+     * Sharp s ("Eszett", "scharfes S")
+     */
+    public static final String SHARP_S = "ẞß";
 
     private FontConverter() {
         throw new UnsupportedOperationException();
     }
 
-    public static MapFont convert(final Font font, final List<Character> charsToCheck) {
-        final List<Character> supportedChars = charsToCheck.stream()
+    /**
+     * Convert the specified font into a MapFont. Since we can't get a list of supported codepoints from
+     * the font object you have to specify each individual character that you want us to convert.
+     * <p>
+     * Unsupported codepoints will be ignored.
+     *
+     * @param font        The Java font
+     * @param textToCheck The characters that you want us to convert
+     *
+     * @return The converted font
+     */
+    public static MapFont convert(final Font font, final String textToCheck) {
+        final List<Integer> supportedCodepoints = textToCheck.codePoints()
                 .filter(font::canDisplay)
+                .boxed()
                 .toList();
 
         final MapFont mapFont = new MapFont();
-        for (final char c : supportedChars) {
-            final BufferedImage img = toImage(font, c);
+        for (final int cp : supportedCodepoints) {
+            final BufferedImage img = toImage(font, cp);
             if (img == null) {
                 continue;
             }
-            final MapFont.CharacterSprite sprite = makeSprite(img);
-            mapFont.setChar(c, sprite);
+            final Sprite sprite = makeSprite(img);
+            mapFont.set(cp, sprite);
         }
         return mapFont;
     }
 
-    private static BufferedImage toImage(final Font font, final char c) {
+    /**
+     * Draw a single codepoint on an image
+     *
+     * @param font The parent font
+     * @param cp   The codepoint
+     *
+     * @return The image
+     */
+    private static BufferedImage toImage(final Font font, final int cp) {
+        // Get bounds of the codepoint (why does this have to be so complicated)
         BufferedImage image = newImg(1, 1);
         Graphics2D graphics = image.createGraphics();
-        final Rectangle2D bounds = font.getStringBounds(String.valueOf(c), graphics.getFontMetrics().getFontRenderContext());
+        final Rectangle2D bounds = font.getStringBounds(new String(Character.toChars(cp)), graphics.getFontMetrics().getFontRenderContext());
         graphics.dispose();
         if (bounds.getWidth() <= 0 || bounds.getHeight() <= 0) {
             return null;
         }
 
+        // Create image with correct size
         image = newImg((int) Math.ceil(bounds.getWidth()), (int) Math.ceil(bounds.getHeight()));
         graphics = image.createGraphics();
-        graphics.setColor(new Color(0, 0, 0, 0));
-        graphics.fillRect(0, 0, image.getWidth(), image.getHeight());
         graphics.setColor(Color.BLACK);
         graphics.setFont(font);
-        graphics.drawString(String.valueOf(c), 0, graphics.getFontMetrics().getAscent());
+        graphics.drawString(new String(Character.toChars(cp)), 0, graphics.getFontMetrics().getAscent());
         graphics.dispose();
         return image;
     }
 
+    /**
+     * Create a new image with the specified bounds
+     *
+     * @param w The width of the image
+     * @param h The height of the image
+     *
+     * @return A new image
+     */
     private static BufferedImage newImg(final int w, final int h) {
         return new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
     }
 
-    private static MapFont.CharacterSprite makeSprite(final BufferedImage image) {
+    /**
+     * Convert an image into a MapFont sprite
+     *
+     * @param image The image
+     *
+     * @return The sprite
+     */
+    private static Sprite makeSprite(final BufferedImage image) {
         final boolean[] data = new boolean[image.getWidth() * image.getHeight()];
-        final MapFont.CharacterSprite sprite = new MapFont.CharacterSprite(image.getWidth(), image.getHeight(), data);
+        final Sprite sprite = new Sprite(image.getWidth(), image.getHeight(), data);
 
         for (int x = 0; x < image.getWidth(); x++) {
             for (int y = 0; y < image.getHeight(); y++) {

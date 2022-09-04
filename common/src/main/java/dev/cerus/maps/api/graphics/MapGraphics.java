@@ -1,6 +1,8 @@
 package dev.cerus.maps.api.graphics;
 
 import dev.cerus.maps.api.colormap.ColorMaps;
+import dev.cerus.maps.api.font.MapFont;
+import dev.cerus.maps.api.font.Sprite;
 import dev.cerus.maps.api.graphics.filter.BoxBlurFilter;
 import dev.cerus.maps.api.graphics.filter.Filter;
 import dev.cerus.maps.api.graphics.filter.GrayscaleFilter;
@@ -10,8 +12,6 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Deque;
-import org.bukkit.map.MapFont;
-import org.bukkit.map.MinecraftFont;
 
 /**
  * The 2D rendering engine for maps. Implementations only need to take care of pixel setting and retrieving.
@@ -622,79 +622,75 @@ public abstract class MapGraphics<C, P> {
 
     /**
      * Draws text
-     * <p>
-     * Stolen from Bukkit, sorry
      *
-     * @param x          X coordinate
-     * @param y          Y coordinate
-     * @param text       The text
-     * @param startColor The color
-     * @param size       The size multiplier (1 = normal)
+     * @param x     X coordinate
+     * @param y     Y coordinate
+     * @param text  The text
+     * @param color The color
+     * @param size  The size multiplier (1 = normal)
      */
-    public void drawText(final int x, final int y, final String text, final byte startColor, final int size) {
-        this.drawText(x, y, text, MinecraftFont.Font, startColor, size);
+    public void drawText(final int x, final int y, final String text, final byte color, final int size) {
+        this.drawText(x, y, text, MapFont.MINECRAFT_FONT, color, size);
     }
 
-    public void drawText(int x, int y, final String text, final MapFont font, final byte startColor, final int size) {
+    /**
+     * Draws text
+     * <p>
+     * This method was originally copied from Bukkit. It has been heavily modified since then to fit our needs.
+     *
+     * @param x     X coordinate
+     * @param y     Y coordinate
+     * @param text  The text
+     * @param font  The font
+     * @param color The color
+     * @param size  The size multiplier (1 = normal)
+     */
+    public void drawText(int x, int y, final String text, final MapFont font, final byte color, final int size) {
         if (size <= 0) {
             throw new IllegalArgumentException("size <= 0");
         }
+        final String textWithoutLinefeed = text == null ? "" : text.replace("\n", "");
+        if (textWithoutLinefeed.length() == 0) {
+            return;
+        }
+        if (!font.isValid(textWithoutLinefeed)) {
+            throw new IllegalArgumentException("Invalid text");
+        }
 
         final int xStart = x;
-        byte color = startColor;
-        if (!font.isValid(text)) {
-            throw new IllegalArgumentException("text contains invalid characters");
-        } else {
-            int currentIndex = 0;
+        final int[] codePoints = text.codePoints().toArray();
+        int currentIndex = 0;
 
-            while (true) {
-                if (currentIndex >= text.length()) {
-                    return;
-                }
+        while (true) {
+            if (currentIndex >= codePoints.length) {
+                return;
+            }
 
-                final char ch = text.charAt(currentIndex);
-                if (ch == '\n') {
-                    // Increment z if the char is a line separator
-                    x = xStart;
-                    y += font.getHeight() + 1;
-                } else if (ch == '\u00A7' /*-> §*/) {
-                    // Get distance from current char to end char (';')
-                    final int end = text.indexOf(';', currentIndex);
-                    if (end < 0) {
-                        break;
-                    }
-
-                    // Parse color
-                    try {
-                        color = Byte.parseByte(text.substring(currentIndex + 1, end));
-                        currentIndex = end;
-                    } catch (final NumberFormatException var12) {
-                        break;
-                    }
-                } else {
-                    // Draw text if the character is not a special character
-                    final MapFont.CharacterSprite sprite = font.getChar(text.charAt(currentIndex));
-
-                    for (int row = 0; row < font.getHeight(); ++row) {
-                        for (int col = 0; col < sprite.getWidth(); ++col) {
-                            if (sprite.get(row, col)) {
-                                for (int eX = 0; eX < size; eX++) {
-                                    for (int eY = 0; eY < size; eY++) {
-                                        this.setPixel(x + (size * col) + (eX), y + (size * row) + (eY), color);
-                                    }
+            final int cp = codePoints[currentIndex];
+            if (cp == '\n') {
+                // Increment y if the char is a line separator
+                x = xStart;
+                y += font.getHeight() + 1;
+            } else {
+                // Draw text if the character is not a special character
+                final Sprite sprite = font.get(cp);
+                for (int row = 0; row < font.getHeight(); ++row) {
+                    for (int col = 0; col < sprite.getWidth(); ++col) {
+                        if (sprite.get(row, col)) {
+                            for (int eX = 0; eX < size; eX++) {
+                                for (int eY = 0; eY < size; eY++) {
+                                    this.setPixel(x + (size * col) + (eX), y + (size * row) + (eY), color);
                                 }
                             }
                         }
                     }
-
-                    // Increment x
-                    x += (sprite.getWidth() + 1) * size;
                 }
 
-                ++currentIndex;
+                // Increment x
+                x += (sprite.getWidth() + 1) * size;
             }
 
-            throw new IllegalArgumentException("Text contains unterminated color string");
+            ++currentIndex;
         }
     }
 

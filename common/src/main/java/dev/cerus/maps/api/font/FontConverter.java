@@ -69,6 +69,7 @@ public class FontConverter {
     public static MapFont convert(final Font font, final Collection<Integer> codepoints) {
         final List<Integer> supportedCodepoints = codepoints.stream()
                 .filter(font::canDisplay)
+                .boxed()
                 .toList();
 
         final MapFont mapFont = new MapFont();

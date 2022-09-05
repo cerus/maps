@@ -59,7 +59,7 @@ See [FAQ](#FAQ)
     <dependency>
         <groupId>dev.cerus.maps</groupId>
         <artifactId>plugin</artifactId>
-        <version>3.4.1</version>
+        <version>3.4.1</version
         <scope>provided</scope>
     </dependency>
 </dependencies>

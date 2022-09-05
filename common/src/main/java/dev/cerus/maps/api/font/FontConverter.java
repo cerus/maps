@@ -5,6 +5,7 @@ import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -51,6 +52,24 @@ public class FontConverter {
                 .filter(font::canDisplay)
                 .boxed()
                 .toList();
+        return convert(font, supportedCodepoints);
+    }
+
+    /**
+     * Convert the specified font into a MapFont. Since we can't get a list of supported codepoints from
+     * the font object you have to specify each individual character that you want us to convert.
+     * <p>
+     * Unsupported codepoints will be ignored.
+     *
+     * @param font       The Java font
+     * @param codepoints The codepoints that you want us to convert
+     *
+     * @return The converted font
+     */
+    public static MapFont convert(final Font font, final Collection<Integer> codepoints) {
+        final List<Integer> supportedCodepoints = codepoints.stream()
+                .filter(font::canDisplay)
+                .toList();
 
         final MapFont mapFont = new MapFont();
         for (final int cp : supportedCodepoints) {
@@ -62,6 +81,45 @@ public class FontConverter {
             mapFont.set(cp, sprite);
         }
         return mapFont;
+    }
+
+    /**
+     * Convert the specified font into a MapFont. Since we can't get a list of supported codepoints from
+     * the font object you have to specify each individual character that you want us to convert.
+     * <p>
+     * Unsupported codepoints will be ignored.
+     *
+     * @param font    The Java font
+     * @param lowest  The lowest codepoint
+     * @param highest The highest codepoint
+     *
+     * @return The converted font
+     */
+    public static MapFont convert(final Font font, final int lowest, final int highest) {
+        final MapFont mapFont = new MapFont();
+        for (int cp = lowest; cp <= highest; cp++) {
+            final BufferedImage img = toImage(font, cp);
+            if (img == null) {
+                continue;
+            }
+            final Sprite sprite = makeSprite(img);
+            mapFont.set(cp, sprite);
+        }
+        return mapFont;
+    }
+
+    /**
+     * Convert the specified font into a MapFont. This method will attempt to convert
+     * all unicode characters.
+     * <p>
+     * Unsupported codepoints will be ignored.
+     *
+     * @param font The Java font
+     *
+     * @return The converted font
+     */
+    public static MapFont convertAllUnicode(final Font font) {
+        return convert(font, 0x00000, 0x10FFFF);
     }
 
     /**

@@ -25,6 +25,7 @@ import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.IntStream;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import org.bukkit.map.MapCursor;
@@ -51,7 +52,7 @@ public class MapsDevCommand extends BaseCommand {
         try {
             final Font font = Font.createFont(Font.TRUETYPE_FONT, new File(JavaPlugin.getPlugin(MapsPlugin.class).getDataFolder(), fontName + ".ttf"))
                     .deriveFont((float) fontSize);
-            mapFont = FontConverter.convert(font, FontConverter.ASCII + FontConverter.UMLAUTS + FontConverter.SHARP_S + " ");
+            mapFont = FontConverter.convert(font, IntStream.range(0, 0x10FFFF).boxed().toList());
         } catch (final Throwable t) {
             t.printStackTrace();
             player.sendMessage("Error " + t.getMessage());

@@ -1,0 +1,16 @@
+name: "Feature request"
+description: "Template for feature requests"
+labels: [ enhancement ]
+body:
+  - type: textarea
+    attributes:
+      label: "Feature description"
+      description: "Please describe the feature you want added in as much detail as possible."
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: "Relevant issues"
+      description: "Please link any relevant issues here."
+    validations:
+      required: false

@@ -1,0 +1,27 @@
+name: "Contribution request"
+description: "Template for contribution requests"
+labels: [ enhancement ]
+body:
+  - type: dropdown
+    attributes:
+      label: "Type"
+      options: [ "New feature", "Bugfix", "Documentation", "Other" ]
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: "If you chose 'other': Specify the contribution type"
+    validations:
+      required: false
+  - type: textarea
+    attributes:
+      label: "Changes"
+      description: "Please describe what you would like to change. Be as precise as possible."
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: "Relevant issues"
+      description: "Please link any relevant issues here."
+    validations:
+      required: false

@@ -15,6 +15,7 @@ public class VersionAdapterFactory {
             case "1.18", "1.18.1" -> new VersionAdapter18R1();
             case "1.18.2" -> new VersionAdapter18R2();
             case "1.19", "1.19.1", "1.19.2" -> new VersionAdapter19R1();
+            case "1.19.3" -> new VersionAdapter19R2();
             default -> null;
         };
     }

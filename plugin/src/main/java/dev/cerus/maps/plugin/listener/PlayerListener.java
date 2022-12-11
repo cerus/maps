@@ -30,7 +30,6 @@ public class PlayerListener implements Listener {
 
     @EventHandler
     public void onJoin(final PlayerJoinEvent event) {
-        event.getPlayer().sendMessage("Injected");
         this.versionAdapter.inject(event.getPlayer(), new PacketListener() {
             @Override
             public boolean handlePlayerLeftClick(final Player player) {

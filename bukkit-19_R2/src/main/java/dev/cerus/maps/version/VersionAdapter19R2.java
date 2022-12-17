@@ -101,7 +101,7 @@ public class VersionAdapter19R2 implements VersionAdapter {
                     case WEST -> 90;
                     default -> 0;
                 },
-                EntityTypes.U,
+                EntityTypes.V,
                 switch (frame.getFacing()) {
                     case UP -> 1;
                     case NORTH -> 2;

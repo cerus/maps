@@ -31,7 +31,7 @@ of <a href="https://github.com/cerus/packet-maps">packet-maps</a>.</p>
 • Advanced engine features
 like [alpha compositing](https://en.wikipedia.org/wiki/Alpha_compositing) ([Image](https://cerus.dev/img/maps_alpha_composition.png))\
 • Efficient click handling\
-• Supports 1.16.5 - 1.19.2
+• Supports 1.16.5 - 1.19.3
 
 **What is the point of the plugin module?**\
 See [FAQ](#FAQ)
@@ -59,7 +59,7 @@ See [FAQ](#FAQ)
     <dependency>
         <groupId>dev.cerus.maps</groupId>
         <artifactId>plugin</artifactId>
-        <version>3.5.0</version
+        <version>3.5.0</version>
         <scope>provided</scope>
     </dependency>
 </dependencies>
@@ -90,19 +90,13 @@ public class MyPlugin extends JavaPlugin {
     public void onEnable() {
         // This example depends on the "common" and "plugin" dependency.
 
-        // Something important to keep in mind when using the plugin for storage:
-        // The plugin loads the map screens 3 seconds after startup. (Check out
-        // the MapsPlugin.java file for an explanation)
-
-        this.getServer().getScheduler().runTaskTimerAsynchronously(this, () -> {
-            for (final MapScreen screen : MapScreenRegistry.getScreens()) {
-                final MapGraphics<?, ?> graphics = screen.getGraphics();
-                graphics.fillComplete(ColorCache.rgbToMap(255, 255, 255)); // Convert rgb(255, 255, 255) to map color and fill the screen
-                graphics.drawText(5, 5, "There are " + Bukkit.getOnlinePlayers().size() + " players on the server", ColorCache.rgbToMap(0, 0, 0), 2);
-                screen.spawnFrames(Bukkit.getOnlinePlayers().toArray(new Player[0])); // Send the screen frames to all online players
-                screen.sendMaps(true); // Send map data to all online players
-            }
-        }, 4 * 20, 20);
+        for (final MapScreen screen : MapScreenRegistry.getScreens()) {
+            final MapGraphics<?, ?> graphics = screen.getGraphics();
+            graphics.fillComplete(ColorCache.rgbToMap(255, 255, 255)); // Convert rgb(255, 255, 255) to map color and fill the screen
+            graphics.drawText(5, 5, "There are " + Bukkit.getOnlinePlayers().size() + " players on the server", ColorCache.rgbToMap(0, 0, 0), 2);
+            screen.spawnFrames(Bukkit.getOnlinePlayers().toArray(new Player[0])); // Send the screen frames to all online players
+            screen.sendMaps(true); // Send map data to all online players
+        }
         getCommand("mapstest").setExecutor(this);
     }
 
@@ -142,7 +136,7 @@ public class MyPlugin extends JavaPlugin {
 
 ### Building
 
-Requirements: Java 16, Git, Maven, Craftbukkit 1.16.5, 1.17.1, 1.18.1, 1.18.2 and 1.19.1 installed in local Maven repo
+Requirements: Java 16, Git, Maven, CraftBukkit 1.16.5, 1.17.1, 1.18.1, 1.18.2, 1.19.1 and 1.19.3 installed in local Maven repo
 
 Simply clone the repository, navigate into the directory and run `mvn clean package`. The plugin will be in `plugin/target` and the api
 in `common/target`.

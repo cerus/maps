@@ -5,7 +5,7 @@
     <parent>
         <artifactId>parent</artifactId>
         <groupId>dev.cerus.maps</groupId>
-        <version>3.5.0</version>
+        <version>3.5.1</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -89,6 +89,12 @@
         <dependency>
             <groupId>dev.cerus.maps</groupId>
             <artifactId>bukkit-19_R2</artifactId>
+            <version>${parent.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>dev.cerus.maps</groupId>
+            <artifactId>bukkit-19_R3</artifactId>
             <version>${parent.version}</version>
             <scope>compile</scope>
         </dependency>

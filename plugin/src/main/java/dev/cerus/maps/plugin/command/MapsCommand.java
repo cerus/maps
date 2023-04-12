@@ -30,6 +30,8 @@ import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.chat.hover.content.Text;
+import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.Player;
 import org.bukkit.map.MapCursor;
@@ -62,6 +64,19 @@ public class MapsCommand extends BaseCommand {
         }
 
         final EntityUtil.ItemFrameResult result = EntityUtil.getNearbyItemFrames(startingFrame, startingFrame.getFacing(), 20, 20);
+        for (int x = 0; x < result.getWidth(); x++) {
+            for (int y = 0; y < result.getHeight(); y++) {
+                final ItemFrame frame = result.getFrames()[x][y];
+                if (frame.getItem().getType() != Material.AIR) {
+                    player.sendMessage("§cFrames can not contain items");
+                    this.versionAdapter.spawnBarrierParticle(player, frame.getLocation().getBlock().getRelative(frame.getFacing()).getLocation().clone().add(0.5, 0.5, 0.5));
+                    player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 1, 1);
+                    return;
+                }
+            }
+        }
+
+
         final Frame[][] frames = new Frame[result.getWidth()][result.getHeight()];
         for (int x = 0; x < result.getWidth(); x++) {
             for (int y = 0; y < result.getHeight(); y++) {
@@ -73,7 +88,8 @@ public class MapsCommand extends BaseCommand {
                         frame.getLocation().getBlockZ(),
                         frame.getFacing(),
                         frame.getEntityId(),
-                        frame.isVisible()
+                        frame.isVisible(),
+                        frame.getType().name().equals("GLOW_ITEM_FRAME")
                 );
                 frame.remove();
             }
@@ -366,6 +382,46 @@ public class MapsCommand extends BaseCommand {
         nanoDiff = nanoAfter - nanoBefore;
         player.sendMessage(String.format("Send took %d ns (%.4f ms)", nanoDiff, ((double) nanoDiff) / TimeUnit.MILLISECONDS.toNanos(1)));
         player.sendMessage("Composition cache: %d".formatted(CompositeColorCache.size()));
+    }
+
+    @Subcommand("screen toggle visibility")
+    @CommandPermission("maps.command.toggle.visibility")
+    public void handleToggleVisibility(final Player player, final int id) {
+        final MapScreen screen = MapScreenRegistry.getScreen(id);
+        if (screen == null) {
+            player.sendMessage("§cScreen not found");
+            return;
+        }
+
+        final boolean visible = screen.getFrames()[0][0].isVisible();
+        for (final Frame[] arr : screen.getFrames()) {
+            for (final Frame frame : arr) {
+                frame.setVisible(!visible);
+            }
+        }
+        player.sendMessage("§aScreen is now " + (visible ? "§einvisible" : "§dvisible"));
+        screen.despawnFrames(player);
+        screen.spawnFrames(player);
+    }
+
+    @Subcommand("screen toggle glow")
+    @CommandPermission("maps.command.toggle.glow")
+    public void handleToggleGlow(final Player player, final int id) {
+        final MapScreen screen = MapScreenRegistry.getScreen(id);
+        if (screen == null) {
+            player.sendMessage("§cScreen not found");
+            return;
+        }
+
+        final boolean glowing = screen.getFrames()[0][0].isGlowing();
+        for (final Frame[] arr : screen.getFrames()) {
+            for (final Frame frame : arr) {
+                frame.setGlowing(!glowing);
+            }
+        }
+        player.sendMessage("§aScreen is now " + (!glowing ? "§eglowing" : "§dno longer glowing"));
+        screen.despawnFrames(player);
+        screen.spawnFrames(player);
     }
 
     @Subcommand("screen remove")

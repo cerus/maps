@@ -20,7 +20,9 @@ import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.level.saveddata.maps.MapIcon;
 import net.minecraft.world.level.saveddata.maps.WorldMap;
 import net.minecraft.world.phys.Vec3D;
+import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Particle;
 import org.bukkit.block.BlockFace;
 import org.bukkit.craftbukkit.v1_19_R2.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v1_19_R2.inventory.CraftItemStack;
@@ -29,6 +31,11 @@ import org.bukkit.inventory.meta.MapMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class VersionAdapter19R2 implements VersionAdapter {
+
+    @Override
+    public void spawnBarrierParticle(final Player player, final Location loc) {
+        player.spawnParticle(Particle.BLOCK_MARKER, loc, 1, Material.BARRIER.createBlockData());
+    }
 
     @Override
     public Object makeMapPacket(final boolean ignoreBounds, final ClientsideMap map) {
@@ -101,7 +108,7 @@ public class VersionAdapter19R2 implements VersionAdapter {
                     case WEST -> 90;
                     default -> 0;
                 },
-                EntityTypes.V,
+                frame.isGlowing() ? EntityTypes.L : EntityTypes.V,
                 switch (frame.getFacing()) {
                     case UP -> 1;
                     case NORTH -> 2;

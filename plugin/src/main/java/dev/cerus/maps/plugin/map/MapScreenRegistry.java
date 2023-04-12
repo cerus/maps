@@ -56,7 +56,8 @@ public class MapScreenRegistry {
                                 frame.getPosZ(),
                                 frame.getFacing(),
                                 EntityIdUtil.next(),
-                                frame.isVisible()
+                                frame.isVisible(),
+                                frame.isGlowing()
                         );
                     }
                 }

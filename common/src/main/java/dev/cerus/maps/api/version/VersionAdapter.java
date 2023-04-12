@@ -2,6 +2,7 @@ package dev.cerus.maps.api.version;
 
 import dev.cerus.maps.api.ClientsideMap;
 import dev.cerus.maps.api.Frame;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -67,5 +68,13 @@ public interface VersionAdapter {
      * @param listener The listener
      */
     void inject(Player player, PacketListener listener, JavaPlugin plugin);
+
+    /**
+     * Spawn a barrier block marker particle
+     *
+     * @param player The receiver
+     * @param loc    The location to spawn the particle at
+     */
+    void spawnBarrierParticle(Player player, Location loc);
 
 }

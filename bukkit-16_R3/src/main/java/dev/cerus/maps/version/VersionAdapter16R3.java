@@ -21,7 +21,9 @@ import net.minecraft.server.v1_16_R3.PacketPlayOutEntityMetadata;
 import net.minecraft.server.v1_16_R3.PacketPlayOutMap;
 import net.minecraft.server.v1_16_R3.PacketPlayOutSpawnEntity;
 import net.minecraft.server.v1_16_R3.Vec3D;
+import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Particle;
 import org.bukkit.block.BlockFace;
 import org.bukkit.craftbukkit.v1_16_R3.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v1_16_R3.inventory.CraftItemStack;
@@ -30,6 +32,11 @@ import org.bukkit.inventory.meta.MapMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class VersionAdapter16R3 implements VersionAdapter {
+
+    @Override
+    public void spawnBarrierParticle(final Player player, final Location loc) {
+        player.spawnParticle(Particle.BARRIER, loc, 1);
+    }
 
     @Override
     public Object makeMapPacket(final boolean ignoreBounds, final ClientsideMap map) {

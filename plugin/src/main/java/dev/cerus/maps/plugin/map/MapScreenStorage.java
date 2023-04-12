@@ -49,7 +49,8 @@ class MapScreenStorage {
                     final Frame frame = screen.getFrames()[x][y];
                     frameList.add(frame.getPosX() + ";" + frame.getPosY() + ";"
                             + frame.getPosZ() + "/" + frame.getFacing().name()
-                            + "/" + x + ";" + y + "/" + frame.isVisible());
+                            + "/" + x + ";" + y + "/" + frame.isVisible() + "/"
+                            + frame.isGlowing());
                 }
             }
 
@@ -93,7 +94,8 @@ class MapScreenStorage {
                         Integer.parseInt(posSplit[2]),
                         facing,
                         EntityIdUtil.next(),
-                        itemSplit.length < 4 || Boolean.parseBoolean(itemSplit[3])
+                        itemSplit.length < 4 || Boolean.parseBoolean(itemSplit[3]),
+                        itemSplit.length >= 5 && Boolean.parseBoolean(itemSplit[4])
                 );
             }
 
@@ -205,7 +207,8 @@ class MapScreenStorage {
                         itemFrame.getLocation().getBlockZ(),
                         itemFrame.getFacing(),
                         itemFrame.getEntityId(),
-                        itemFrame.isVisible()
+                        itemFrame.isVisible(),
+                        itemFrame.getType().name().equals("GLOW_ITEM_FRAME")
                 );
                 tempChunkSet.add(chunk);
             }

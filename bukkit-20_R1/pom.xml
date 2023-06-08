@@ -2,15 +2,14 @@
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
     <parent>
-        <artifactId>parent</artifactId>
         <groupId>dev.cerus.maps</groupId>
+        <artifactId>parent</artifactId>
         <version>3.7.0</version>
     </parent>
-    <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>bukkit-18_R2</artifactId>
-    <version>${parent.version}</version>
+    <artifactId>bukkit-20_R1</artifactId>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -27,7 +26,7 @@
         <dependency>
             <groupId>org.bukkit</groupId>
             <artifactId>craftbukkit</artifactId>
-            <version>1.18.2-R0.1-SNAPSHOT</version>
+            <version>1.20-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

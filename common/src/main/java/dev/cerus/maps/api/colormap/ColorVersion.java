@@ -1,5 +1,6 @@
 package dev.cerus.maps.api.colormap;
 
+@Deprecated(forRemoval = true)
 public enum ColorVersion {
 
     /**

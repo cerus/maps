@@ -17,7 +17,7 @@ import dev.cerus.maps.api.version.VersionAdapter;
 import dev.cerus.maps.plugin.MapsPlugin;
 import dev.cerus.maps.plugin.map.MapScreenRegistry;
 import dev.cerus.maps.raycast.RayCastUtil;
-import dev.cerus.maps.triangulation.ScreenTriangulator;
+import dev.cerus.maps.triangulation.ScreenTriangulation;
 import dev.cerus.maps.util.Vec2;
 import java.awt.Font;
 import java.io.File;
@@ -59,7 +59,6 @@ public class MapsDevCommand extends BaseCommand {
             screen.sendMaps(true);
         }
 
-        final ScreenTriangulator triangulator = new ScreenTriangulator();
         new BukkitRunnable() {
 
             private final List<Long> times = new ArrayList<>();
@@ -85,9 +84,9 @@ public class MapsDevCommand extends BaseCommand {
                     if (verbose) {
                         player.sendMessage("> " + mapScreen.getId());
                     }
-                    final Vec2 screenPos = triangulator.getScreenPos(player, mapScreen, verbose);
+                    final Vec2 screenPos = ScreenTriangulation.triangulateScreenCoords(player, mapScreen);
                     if (screenPos != null) {
-                        final double distance = triangulator.distance(player, mapScreen);
+                        final double distance = ScreenTriangulation.distance(player, mapScreen);
                         if (pos != null) {
                             if (distance > dist) {
                                 continue;
@@ -150,7 +149,6 @@ public class MapsDevCommand extends BaseCommand {
         }
 
         if (true) {
-            final ScreenTriangulator triangulator = new ScreenTriangulator();
             final MapGraphics<MapScreen, ClientsideMap[][]> graphics = screen.getGraphics();
             graphics.fillComplete(ColorCache.rgbToMap(255, 255, 255));
 
@@ -162,7 +160,7 @@ public class MapsDevCommand extends BaseCommand {
                 @Override
                 public void run() {
                     long ns = System.nanoTime();
-                    final Vec2 pos = triangulator.getScreenPos(player, screen);
+                    final Vec2 pos = ScreenTriangulation.triangulateScreenCoords(player, screen);
                     ns = System.nanoTime() - ns;
                     this.times.add(ns);
                     if (this.times.size() > 100) {

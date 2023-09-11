@@ -61,24 +61,7 @@ public class MapsCommand extends BaseCommand {
             return;
         }
 
-<<<<<<< Updated upstream
         final EntityUtil.ItemFrameResult result = EntityUtil.getNearbyItemFrames(startingFrame, startingFrame.getFacing(), 20, 20);
-=======
-        final EntityUtil.ItemFrameResult result = EntityUtil.getNearbyItemFrames(startingFrame, startingFrame.getFacing(), 50, 50);
-        for (int x = 0; x < result.getWidth(); x++) {
-            for (int y = 0; y < result.getHeight(); y++) {
-                final ItemFrame frame = result.getFrames()[x][y];
-                if (frame.getItem().getType() != Material.AIR) {
-                    player.sendMessage("§cFrames can not contain items");
-                    this.versionAdapter.spawnBarrierParticle(player, frame.getLocation().getBlock().getRelative(frame.getFacing()).getLocation().clone().add(0.5, 0.5, 0.5));
-                    player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 1, 1);
-                    return;
-                }
-            }
-        }
-
-
->>>>>>> Stashed changes
         final Frame[][] frames = new Frame[result.getWidth()][result.getHeight()];
         for (int x = 0; x < result.getWidth(); x++) {
             for (int y = 0; y < result.getHeight(); y++) {

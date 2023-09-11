@@ -121,7 +121,7 @@ public class MapScreen {
                 final ClientsideMap map = this.mapArray[x][y];
                 // If bounds are zero there are no changes
                 if (!full && map.getX() == 0 && map.getY() == 0 && map.getWidth() == 0
-                        && map.getHeight() == 0 && !map.hasDirtyMarkers()) {
+                    && map.getHeight() == 0 && !map.hasDirtyMarkers()) {
                     continue;
                 }
 
@@ -273,9 +273,17 @@ public class MapScreen {
 
     public Location getLocation() {
         if (this.location == null && this.frames != null
-                && this.frames.length > 0 && this.frames[0].length > 0) {
+            && this.frames.length > 0 && this.frames[0].length > 0) {
             final Frame f = this.frames[0][0];
             this.location = new Location(f.getWorld(), f.getPosX(), f.getPosY(), f.getPosZ());
+            switch (f.getFacing()) {
+                case NORTH -> {
+                    this.location.setX(this.location.getBlockX() + 0.99d);
+                    this.location.setZ(this.location.getBlockZ() + 0.99d);
+                }
+                case EAST -> this.location.setZ(this.location.getBlockZ() + 0.99d);
+                case WEST -> this.location.setX(this.location.getBlockX() + 0.99d);
+            }
         }
         return this.location;
     }
@@ -303,8 +311,8 @@ public class MapScreen {
 
         public boolean contains(final Location loc) {
             return (loc.getX() >= Math.min(this.bottomLeft.getX(), this.topRight.getX()) && loc.getX() <= Math.max(this.bottomLeft.getX(), this.topRight.getX()))
-                    && (loc.getY() >= Math.min(this.bottomLeft.getY(), this.topRight.getY()) && loc.getY() <= Math.max(this.bottomLeft.getY(), this.topRight.getY()))
-                    && (loc.getZ() >= Math.min(this.bottomLeft.getZ(), this.topRight.getZ()) && loc.getZ() <= Math.max(this.bottomLeft.getZ(), this.topRight.getZ()));
+                   && (loc.getY() >= Math.min(this.bottomLeft.getY(), this.topRight.getY()) && loc.getY() <= Math.max(this.bottomLeft.getY(), this.topRight.getY()))
+                   && (loc.getZ() >= Math.min(this.bottomLeft.getZ(), this.topRight.getZ()) && loc.getZ() <= Math.max(this.bottomLeft.getZ(), this.topRight.getZ()));
         }
 
     }

@@ -63,7 +63,7 @@ public class MapsCommand extends BaseCommand {
             return;
         }
 
-        final EntityUtil.ItemFrameResult result = EntityUtil.getNearbyItemFrames(startingFrame, startingFrame.getFacing(), 20, 20);
+        final EntityUtil.ItemFrameResult result = EntityUtil.getNearbyItemFrames(startingFrame, startingFrame.getFacing(), 50, 50);
         for (int x = 0; x < result.getWidth(); x++) {
             for (int y = 0; y < result.getHeight(); y++) {
                 final ItemFrame frame = result.getFrames()[x][y];

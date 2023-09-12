@@ -67,7 +67,7 @@ public class MapsPlugin extends JavaPlugin {
                     mapsConfig.getDouble("max-click-dist", 10d)
             ), this);
 
-            final String clickStrategy = useTriangulation ? "Screen Triangulation" : "Raycasting";
+            final String clickStrategy = useTriangulation ? "Triangulation" : "Raycasting";
             this.getLogger().info("Strategy used for screen click handling: " + clickStrategy);
         }
 

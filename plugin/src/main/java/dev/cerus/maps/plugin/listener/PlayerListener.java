@@ -1,14 +1,17 @@
 package dev.cerus.maps.plugin.listener;
 
+import dev.cerus.maps.api.MapScreen;
 import dev.cerus.maps.api.event.PlayerClickScreenEvent;
 import dev.cerus.maps.api.version.PacketListener;
 import dev.cerus.maps.api.version.VersionAdapter;
 import dev.cerus.maps.plugin.MapsPlugin;
 import dev.cerus.maps.plugin.map.MapScreenRegistry;
 import dev.cerus.maps.raycast.RayCastUtil;
+import dev.cerus.maps.triangulation.ScreenTriangulation;
 import dev.cerus.maps.util.Vec2;
 import java.util.Optional;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -20,11 +23,15 @@ import org.bukkit.plugin.java.JavaPlugin;
  */
 public class PlayerListener implements Listener {
 
+    private static final double MAX_DISTANCE_TO_SCREEN = 64 * 64;
+
     private final VersionAdapter versionAdapter;
     private final double maxRayLength;
+    private final boolean useTriangulation;
 
-    public PlayerListener(final VersionAdapter versionAdapter, final double maxRayLength) {
+    public PlayerListener(final VersionAdapter versionAdapter, final boolean useTriangulation, final double maxRayLength) {
         this.versionAdapter = versionAdapter;
+        this.useTriangulation = useTriangulation;
         this.maxRayLength = maxRayLength;
     }
 
@@ -44,7 +51,22 @@ public class PlayerListener implements Listener {
     }
 
     private boolean call(final Player player, final boolean rightClick) {
-        final Optional<RayCastUtil.Result> resultOptional = RayCastUtil.getTargetedScreen(player, this.maxRayLength, MapScreenRegistry.getScreens());
+        Optional<RayCastUtil.Result> resultOptional = Optional.empty();
+        if (this.useTriangulation) {
+            final Location playerLoc = player.getLocation();
+            for (final MapScreen screen : MapScreenRegistry.getScreens()) {
+                final double dist = playerLoc.distanceSquared(screen.getLocation());
+                if (dist < MAX_DISTANCE_TO_SCREEN) { // Only run calculations for screens in range
+                    final Vec2 coords = ScreenTriangulation.triangulateScreenCoords(player, screen);
+                    if (coords != null) {
+                        resultOptional = Optional.of(new RayCastUtil.Result(screen, coords.x, coords.y));
+                        break;
+                    }
+                }
+            }
+        } else {
+            resultOptional = RayCastUtil.getTargetedScreen(player, this.maxRayLength, MapScreenRegistry.getScreens());
+        }
         if (resultOptional.isEmpty()) {
             return false;
         }
@@ -53,7 +75,7 @@ public class PlayerListener implements Listener {
         final PlayerClickScreenEvent event = new PlayerClickScreenEvent(player,
                 !Bukkit.isPrimaryThread(),
                 result.targetScreen(),
-                new Vec2(result.screenX(), result.screenY()),
+                new Vec2(result.screenX(), result.targetScreen().getHeight() * 128 - result.screenY()),
                 rightClick);
         Bukkit.getPluginManager().callEvent(event);
         return event.isCancelled();

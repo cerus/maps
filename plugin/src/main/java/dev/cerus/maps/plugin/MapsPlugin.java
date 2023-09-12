@@ -60,8 +60,15 @@ public class MapsPlugin extends JavaPlugin {
         commandManager.registerCommand(new MapsCommand());
 
         if (mapsConfig.getBoolean("enable-click-listener", false)) {
-            this.getServer().getPluginManager().registerEvents(new PlayerListener(versionAdapter,
-                    mapsConfig.getDouble("max-click-dist", 10d)), this);
+            final boolean useTriangulation = mapsConfig.getBoolean("use-triangulation", true);
+            this.getServer().getPluginManager().registerEvents(new PlayerListener(
+                    versionAdapter,
+                    useTriangulation,
+                    mapsConfig.getDouble("max-click-dist", 10d)
+            ), this);
+
+            final String clickStrategy = useTriangulation ? "Screen Triangulation" : "Raycasting";
+            this.getLogger().info("Strategy used for screen click handling: " + clickStrategy);
         }
 
         if (DevContext.ENABLED) {

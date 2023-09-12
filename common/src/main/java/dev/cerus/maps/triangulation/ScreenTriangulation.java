@@ -152,7 +152,7 @@ public final class ScreenTriangulation {
      * @param entity The entity to calculate the distance for
      * @param screen The screen to calculate the distance to
      *
-     * @return The distance on the Z (north & south) or X (east & west) axis
+     * @return The distance on the Z (north &amp; south) or X (east &amp; west) axis
      */
     public static double distance(final Entity entity, final MapScreen screen) {
         if (entity == null || screen == null) {
@@ -169,7 +169,7 @@ public final class ScreenTriangulation {
      * @param loc    The location to calculate the distance for
      * @param screen The screen to calculate the distance to
      *
-     * @return The distance on the Z (north & south) or X (east & west) axis
+     * @return The distance on the Z (north &amp; south) or X (east &amp; west) axis
      */
     public static double distance(final Location loc, final MapScreen screen) {
         if (loc == null || screen == null) {

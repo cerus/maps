@@ -7,7 +7,7 @@
     <groupId>dev.cerus.maps</groupId>
     <artifactId>parent</artifactId>
     <packaging>pom</packaging>
-    <version>3.8.0</version>
+    <version>3.8.1</version>
     <modules>
         <module>common</module>
         <module>bukkit-16_R3</module>
@@ -16,9 +16,10 @@
         <module>bukkit-18_R2</module>
         <module>bukkit-19_R1</module>
         <module>bukkit-19_R2</module>
-        <module>plugin</module>
         <module>bukkit-19_R3</module>
         <module>bukkit-20_R1</module>
+        <module>bukkit-20_R2</module>
+        <module>plugin</module>
     </modules>
 
     <name>${artifactId}</name>

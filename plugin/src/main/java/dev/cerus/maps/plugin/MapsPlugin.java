@@ -12,6 +12,8 @@ import dev.cerus.maps.plugin.listener.PlayerListener;
 import dev.cerus.maps.plugin.map.MapScreenRegistry;
 import dev.cerus.maps.version.VersionAdapterFactory;
 import java.io.File;
+import java.lang.reflect.Field;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -58,6 +60,17 @@ public class MapsPlugin extends JavaPlugin {
         final BukkitCommandManager commandManager = new BukkitCommandManager(this);
         commandManager.registerDependency(VersionAdapter.class, versionAdapter);
         commandManager.registerCommand(new MapsCommand());
+
+        // Workaround for acf locale errors
+        try {
+            final Field loggerField = commandManager.getClass().getDeclaredField("logger");
+            loggerField.setAccessible(true);
+            final Logger acfLogger = (Logger) loggerField.get(commandManager);
+            acfLogger.setLevel(Level.OFF);
+            acfLogger.setFilter(record -> false);
+        } catch (final NoSuchFieldException | IllegalAccessException ex) {
+            this.getLogger().log(Level.WARNING, "Failed to disable ACF logger", ex);
+        }
 
         if (mapsConfig.getBoolean("enable-click-listener", false)) {
             final boolean useTriangulation = mapsConfig.getBoolean("use-triangulation", true);

@@ -29,13 +29,13 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.block.BlockFace;
-import org.bukkit.craftbukkit.v1_20_R2.entity.CraftPlayer;
-import org.bukkit.craftbukkit.v1_20_R2.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_20_R3.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_20_R3.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.meta.MapMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 
-public class VersionAdapter20R2 implements VersionAdapter {
+public class VersionAdapter20R3 implements VersionAdapter {
 
     private Field netManField;
 
@@ -153,7 +153,7 @@ public class VersionAdapter20R2 implements VersionAdapter {
             plugin.getLogger().log(Level.WARNING, "Failed to inject packet handler into player %s".formatted(player.getName()), e);
             return;
         }
-        networkManager.n.pipeline().addBefore("packet_handler", "maps_listener", new PacketHandler20R2(player, listener, plugin));
+        networkManager.n.pipeline().addBefore("packet_handler", "maps_listener", new PacketHandler20R3(player, listener, plugin));
     }
 
     private NetworkManager getNetworkManager(final PlayerConnection b) throws IllegalAccessException, NoSuchFieldException {

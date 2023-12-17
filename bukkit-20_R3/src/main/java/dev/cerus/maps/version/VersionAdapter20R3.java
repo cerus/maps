@@ -115,7 +115,7 @@ public class VersionAdapter20R3 implements VersionAdapter {
                     case WEST -> 90;
                     default -> 0;
                 },
-                frame.isGlowing() ? EntityTypes.S : EntityTypes.af,
+                frame.isGlowing() ? EntityTypes.T : EntityTypes.ag,
                 switch (frame.getFacing()) {
                     case UP -> 1;
                     case NORTH -> 2;

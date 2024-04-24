@@ -31,7 +31,7 @@ of <a href="https://github.com/cerus/packet-maps">packet-maps</a>.</p>
 • Advanced engine features
 like [alpha compositing](https://en.wikipedia.org/wiki/Alpha_compositing) ([Image](https://cerus.dev/img/maps_alpha_composition.png))\
 • Efficient click handling\
-• Supports 1.16.5 - 1.20.4
+• Supports 1.16.5 - 1.20.5
 
 **What is the point of the plugin module?**\
 See [FAQ](#FAQ)
@@ -50,7 +50,7 @@ See [FAQ](#FAQ)
     <dependency>
         <groupId>dev.cerus.maps</groupId>
         <artifactId>common</artifactId>
-        <version>3.8.3</version>
+        <version>3.8.4</version>
         <scope>provided</scope> <!-- "provided" if the maps plugin is on the server, "compile" if not -->
     </dependency>
 
@@ -59,7 +59,7 @@ See [FAQ](#FAQ)
     <dependency>
         <groupId>dev.cerus.maps</groupId>
         <artifactId>plugin</artifactId>
-        <version>3.8.3</version>
+        <version>3.8.4</version>
         <scope>provided</scope>
     </dependency>
 </dependencies>
@@ -136,7 +136,7 @@ public class MyPlugin extends JavaPlugin {
 
 ### Building
 
-Requirements: Java 16, Git, Maven, CraftBukkit 1.16.5, 1.17.1, 1.18.1, 1.18.2, 1.19.1, 1.19.3, 1.19.4, 1.20, 1.20.2 and 1.20.4 installed in local
+Requirements: Java 21, Git, Maven, CraftBukkit 1.16.5, 1.17.1, 1.18.1, 1.18.2, 1.19.1, 1.19.3, 1.19.4, 1.20, 1.20.2, 1.20.4 and 1.20.5 installed in local
 Maven repo
 
 Simply clone the repository, navigate into the directory and run `mvn clean package`. The plugin will be in `plugin/target` and the api

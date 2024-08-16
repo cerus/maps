@@ -55,6 +55,9 @@ public class PlayerListener implements Listener {
         if (this.useTriangulation) {
             final Location playerLoc = player.getLocation();
             for (final MapScreen screen : MapScreenRegistry.getScreens()) {
+                if (player.getWorld() != screen.getLocation().getWorld()) {
+                    continue;
+                }
                 final double dist = playerLoc.distanceSquared(screen.getLocation());
                 if (dist < MAX_DISTANCE_TO_SCREEN) { // Only run calculations for screens in range
                     final Vec2 coords = ScreenTriangulation.triangulateScreenCoords(player, screen);

@@ -50,7 +50,7 @@ See [FAQ](#FAQ)
     <dependency>
         <groupId>dev.cerus.maps</groupId>
         <artifactId>common</artifactId>
-        <version>3.8.7</version>
+        <version>3.8.8</version>
         <scope>provided</scope> <!-- "provided" if the maps plugin is on the server, "compile" if not -->
     </dependency>
 
@@ -59,7 +59,7 @@ See [FAQ](#FAQ)
     <dependency>
         <groupId>dev.cerus.maps</groupId>
         <artifactId>plugin</artifactId>
-        <version>3.8.7</version>
+        <version>3.8.8</version>
         <scope>provided</scope>
     </dependency>
 </dependencies>

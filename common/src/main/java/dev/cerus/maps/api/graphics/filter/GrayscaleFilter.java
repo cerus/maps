@@ -8,7 +8,7 @@ import java.awt.Color;
 public class GrayscaleFilter implements Filter {
 
     @Override
-    public byte apply(final MapGraphics<?, ?> graphics, final int x, final int y, final int minX, final int maxX, final int minY, final int maxY) {
+    public byte apply(final MapGraphics<?> graphics, final int x, final int y, final int minX, final int maxX, final int minY, final int maxY) {
         final byte pixel = graphics.getPixel(x, y);
         if (graphics.isTransparent(pixel)) {
             return pixel;

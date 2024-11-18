@@ -11,7 +11,7 @@ import java.util.Comparator;
  *
  * @deprecated Use {@link dev.cerus.maps.api.colormap.ColorMap} and {@link dev.cerus.maps.api.colormap.ColorMaps} instead
  */
-@Deprecated
+@Deprecated(forRemoval = true)
 public enum MapColor {
 
     TRANSPARENT_0(0, null),

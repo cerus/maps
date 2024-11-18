@@ -4,13 +4,18 @@ import dev.cerus.maps.api.ClientsideMap;
 import dev.cerus.maps.api.Frame;
 import dev.cerus.maps.api.version.PacketListener;
 import dev.cerus.maps.api.version.VersionAdapter;
+import dev.cerus.maps.util.MinecraftVersion;
 import dev.cerus.maps.util.ReflectionUtil;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import net.minecraft.server.v1_16_R3.DataWatcher;
 import net.minecraft.server.v1_16_R3.DataWatcherObject;
 import net.minecraft.server.v1_16_R3.DataWatcherRegistry;
+import net.minecraft.server.v1_16_R3.Entity;
 import net.minecraft.server.v1_16_R3.EntityTypes;
 import net.minecraft.server.v1_16_R3.IChatBaseComponent;
 import net.minecraft.server.v1_16_R3.ItemStack;
@@ -32,6 +37,21 @@ import org.bukkit.inventory.meta.MapMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class VersionAdapter16R3 implements VersionAdapter {
+
+    private final AtomicInteger entityIdHolder;
+
+    public VersionAdapter16R3() {
+        Field entityIdField = Arrays.stream(Entity.class.getDeclaredFields())
+                .filter(field -> Modifier.isStatic(field.getModifiers()))
+                .filter(field -> field.getType() == AtomicInteger.class)
+                .findFirst().orElseThrow();
+        entityIdField.setAccessible(true);
+        try {
+            entityIdHolder = (AtomicInteger) entityIdField.get(null);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     @Override
     public void spawnBarrierParticle(final Player player, final Location loc) {
@@ -56,10 +76,10 @@ public class VersionAdapter16R3 implements VersionAdapter {
                         ))
                         .collect(Collectors.toList()),
                 map.getData(),
-                ignoreBounds ? 0 : map.getX(),
-                ignoreBounds ? 0 : map.getY(),
-                ignoreBounds ? 128 : map.getWidth(),
-                ignoreBounds ? 128 : map.getHeight()
+                ignoreBounds ? 0 : map.getBoundsX(),
+                ignoreBounds ? 0 : map.getBoundsY(),
+                ignoreBounds ? 128 : map.getBoundsWidth(),
+                ignoreBounds ? 128 : map.getBoundsHeight()
         );
     }
 
@@ -131,4 +151,13 @@ public class VersionAdapter16R3 implements VersionAdapter {
                 .addBefore("packet_handler", "maps_listener", new PacketHandler16R3(player, listener, plugin));
     }
 
+    @Override
+    public int nextEntityId() {
+        return entityIdHolder.incrementAndGet();
+    }
+
+    @Override
+    public boolean supportsVersion(MinecraftVersion version) {
+        return version.equals(MinecraftVersion.RELEASE_1_16_5);
+    }
 }

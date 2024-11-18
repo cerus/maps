@@ -22,7 +22,7 @@ public interface Filter {
      *
      * @return The transformed color
      */
-    byte apply(MapGraphics<?, ?> graphics, int x, int y, int minX, int maxX, int minY, int maxY);
+    byte apply(MapGraphics<?> graphics, int x, int y, int minX, int maxX, int minY, int maxY);
 
     /**
      * The amount of times this filter should be applied

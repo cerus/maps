@@ -4,10 +4,13 @@ import dev.cerus.maps.api.ClientsideMap;
 import dev.cerus.maps.api.Frame;
 import dev.cerus.maps.api.version.PacketListener;
 import dev.cerus.maps.api.version.VersionAdapter;
+import dev.cerus.maps.util.MinecraftVersion;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import net.minecraft.network.NetworkManager;
@@ -21,6 +24,7 @@ import net.minecraft.network.syncher.DataWatcher;
 import net.minecraft.network.syncher.DataWatcherRegistry;
 import net.minecraft.server.network.PlayerConnection;
 import net.minecraft.server.network.ServerCommonPacketListenerImpl;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.level.saveddata.maps.MapIcon;
 import net.minecraft.world.level.saveddata.maps.WorldMap;
@@ -37,7 +41,21 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public class VersionAdapter20R2 implements VersionAdapter {
 
+    private final AtomicInteger entityIdHolder;
     private Field netManField;
+
+    public VersionAdapter20R2() {
+        Field entityIdField = Arrays.stream(Entity.class.getDeclaredFields())
+                .filter(field -> Modifier.isStatic(field.getModifiers()))
+                .filter(field -> field.getType() == AtomicInteger.class)
+                .findFirst().orElseThrow();
+        entityIdField.setAccessible(true);
+        try {
+            entityIdHolder = (AtomicInteger) entityIdField.get(null);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     @Override
     public void spawnBarrierParticle(final Player player, final Location loc) {
@@ -46,10 +64,10 @@ public class VersionAdapter20R2 implements VersionAdapter {
 
     @Override
     public Object makeMapPacket(final boolean ignoreBounds, final ClientsideMap map) {
-        final int x = ignoreBounds ? 0 : map.getX();
-        final int y = ignoreBounds ? 0 : map.getY();
-        final int w = ignoreBounds ? 128 : Math.max(1, map.getWidth());
-        final int h = ignoreBounds ? 128 : Math.max(1, map.getHeight());
+        final int x = ignoreBounds ? 0 : map.getBoundsX();
+        final int y = ignoreBounds ? 0 : map.getBoundsY();
+        final int w = ignoreBounds ? 128 : Math.max(1, map.getBoundsWidth());
+        final int h = ignoreBounds ? 128 : Math.max(1, map.getBoundsHeight());
 
         final byte[] data;
         if (ignoreBounds) {
@@ -164,4 +182,13 @@ public class VersionAdapter20R2 implements VersionAdapter {
         return (NetworkManager) this.netManField.get(b);
     }
 
+    @Override
+    public int nextEntityId() {
+        return entityIdHolder.incrementAndGet();
+    }
+
+    @Override
+    public boolean supportsVersion(MinecraftVersion version) {
+        return version.equals(MinecraftVersion.RELEASE_1_20_2);
+    }
 }

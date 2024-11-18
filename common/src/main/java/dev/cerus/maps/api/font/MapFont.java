@@ -23,6 +23,7 @@ public class MapFont {
      *
      * @return The converted font
      */
+    @SuppressWarnings("unchecked")
     public static MapFont fromBukkit(final org.bukkit.map.MapFont bukkitFont) {
         final MapFont mapFont = new MapFont();
         try {

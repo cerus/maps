@@ -4,7 +4,6 @@ import dev.cerus.maps.api.Frame;
 import dev.cerus.maps.api.MapScreen;
 import dev.cerus.maps.api.version.VersionAdapter;
 import dev.cerus.maps.plugin.MapsPlugin;
-import dev.cerus.maps.util.EntityIdUtil;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -30,7 +29,7 @@ public class MapScreenRegistry {
     public static void load(final ConfigurationSection configuration, final VersionAdapter versionAdapter) {
         final Optional<Integer> versionOpt = MapScreenStorage.determineVersion(configuration);
         if (versionOpt.isEmpty()) {
-            final AtomicInteger highestIdAtomic = new AtomicInteger(highestId);
+            AtomicInteger highestIdAtomic = new AtomicInteger(highestId);
             MapScreenStorage.loadLegacy(configuration, versionAdapter, plugin, highestIdAtomic, screenMap);
             highestId = highestIdAtomic.get();
 
@@ -55,7 +54,7 @@ public class MapScreenRegistry {
                                 frame.getPosY(),
                                 frame.getPosZ(),
                                 frame.getFacing(),
-                                EntityIdUtil.next(),
+                                versionAdapter.nextEntityId(),
                                 frame.isVisible(),
                                 frame.isGlowing()
                         );
@@ -71,7 +70,7 @@ public class MapScreenRegistry {
                 throw new IllegalStateException("Unknown data version " + ver);
             }
 
-            final AtomicInteger highestIdAtomic = new AtomicInteger(highestId);
+            AtomicInteger highestIdAtomic = new AtomicInteger(highestId);
             MapScreenStorage.loadV1(configuration, versionAdapter, highestIdAtomic, screenMap);
             highestId = highestIdAtomic.get();
         }
@@ -88,37 +87,13 @@ public class MapScreenRegistry {
 
     public static void registerScreen(final MapScreen screen) {
         screenMap.put(screen.getId(), screen);
-        /*if (screen.getFrameIds() != null) {
-            Arrays.stream(screen.getFrameIds())
-                    .flatMapToInt(Arrays::stream)
-                    .mapToObj(i -> Bukkit.getWorlds().stream()
-                            .flatMap(world -> world.getEntities().stream())
-                            .filter(entity -> entity.getEntityId() == i)
-                            .findAny()
-                            .orElse(null))
-                    .filter(Objects::nonNull)
-                    .map(entity -> entity.getLocation().getChunk())
-                    .forEach(chunk -> chunk.addPluginChunkTicket(plugin));
-        }*/
         if (screen.getId() > highestId) {
             highestId = screen.getId();
         }
     }
 
     public static void removeScreen(final int id) {
-        final MapScreen screen = screenMap.remove(id);
-        /*if (screen != null && screen.getFrameIds() != null) {
-            Arrays.stream(screen.getFrameIds())
-                    .flatMapToInt(Arrays::stream)
-                    .mapToObj(i -> Bukkit.getWorlds().stream()
-                            .flatMap(world -> world.getEntities().stream())
-                            .filter(entity -> entity.getEntityId() == i)
-                            .findAny()
-                            .orElse(null))
-                    .filter(Objects::nonNull)
-                    .map(entity -> entity.getLocation().getChunk())
-                    .forEach(chunk -> chunk.removePluginChunkTicket(plugin));
-        }*/
+        screenMap.remove(id);
     }
 
     public static MapScreen getScreen(final int id) {

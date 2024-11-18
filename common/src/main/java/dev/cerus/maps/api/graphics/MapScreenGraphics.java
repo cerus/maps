@@ -1,47 +1,48 @@
 package dev.cerus.maps.api.graphics;
 
-import dev.cerus.maps.api.ClientsideMap;
-import dev.cerus.maps.api.MapScreen;
+import dev.cerus.maps.api.MapAccess;
 
 /**
  * Graphics implementation for map screens
  * <p>
  * Uses clientside map graphics under the hood
+ * @deprecated Superseded by {@link BasicMapGraphics}
  */
-public class MapScreenGraphics extends MapGraphics<MapScreen, ClientsideMap[][]> {
+@Deprecated(forRemoval = true)
+public class MapScreenGraphics extends MapGraphics<MapAccess> {
 
     private final int width;
     private final int height;
     private final ClientsideMapGraphics[][] graphicsArray;
 
-    public MapScreenGraphics(final int w, final int h) {
+    public MapScreenGraphics(int w, int h) {
         this.width = w;
         this.height = h;
         this.graphicsArray = new ClientsideMapGraphics[w][h];
         for (int x = 0; x < w; x++) {
             for (int y = 0; y < h; y++) {
-                this.graphicsArray[x][y] = new ClientsideMapGraphics();
+                this.graphicsArray[x][y] = new ClientsideMapGraphics(null);
             }
         }
     }
 
     @Override
-    public void fillComplete(final byte color) {
-        for (final ClientsideMapGraphics[] array : this.graphicsArray) {
-            for (final ClientsideMapGraphics g : array) {
-                g.fillComplete(color);
+    public void fillBuffer(byte color) {
+        for (ClientsideMapGraphics[] array : this.graphicsArray) {
+            for (ClientsideMapGraphics g : array) {
+                g.fillBuffer(color);
             }
         }
     }
 
     @Override
-    public byte setPixel(final int x, final int y, final float alpha, final byte color) {
+    public byte setPixel(int x, int y, float alpha, byte color) {
         if (x < 0 || y < 0) {
             return color;
         }
 
-        final int arrX = x / 128;
-        final int arrY = y / 128;
+        int arrX = x / 128;
+        int arrY = y / 128;
 
         // Check bounds
         if (arrX >= this.graphicsArray.length || arrY >= this.graphicsArray[arrX].length || alpha == 0f) {
@@ -49,18 +50,18 @@ public class MapScreenGraphics extends MapGraphics<MapScreen, ClientsideMap[][]>
         }
 
         // Get right graphics and set pixel
-        final ClientsideMapGraphics graphics = this.graphicsArray[arrX][arrY];
+        ClientsideMapGraphics graphics = this.graphicsArray[arrX][arrY];
         return graphics.setPixel(x % 128, y % 128, alpha, color);
     }
 
     @Override
-    public byte getPixel(final int x, final int y) {
+    public byte getPixel(int x, int y) {
         if (x < 0 || y < 0) {
             return 0;
         }
 
-        final int arrX = x / 128;
-        final int arrY = y / 128;
+        int arrX = x / 128;
+        int arrY = y / 128;
 
         // Check bounds
         if (arrX >= this.graphicsArray.length || arrY >= this.graphicsArray[arrX].length) {
@@ -71,16 +72,16 @@ public class MapScreenGraphics extends MapGraphics<MapScreen, ClientsideMap[][]>
     }
 
     @Override
-    public void renderOnto(final MapScreen renderTarget, final ClientsideMap[][] array) {
-        for (int x = 0; x < renderTarget.getWidth(); x++) {
-            for (int y = 0; y < renderTarget.getHeight(); y++) {
-                array[x][y].draw(this.graphicsArray[x][y]);
-            }
-        }
+    public void markAreaDirty(int x, int y, int w, int h) {
     }
 
     @Override
-    public MapGraphics<MapScreen, ClientsideMap[][]> copy() {
+    public void draw() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public MapGraphics<MapAccess> copy() {
         throw new UnsupportedOperationException();
     }
 

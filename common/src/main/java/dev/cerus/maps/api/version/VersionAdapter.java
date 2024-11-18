@@ -2,6 +2,7 @@ package dev.cerus.maps.api.version;
 
 import dev.cerus.maps.api.ClientsideMap;
 import dev.cerus.maps.api.Frame;
+import dev.cerus.maps.util.MinecraftVersion;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -10,6 +11,10 @@ import org.bukkit.plugin.java.JavaPlugin;
  * Interface for version specific code
  */
 public interface VersionAdapter {
+
+    default Object bundlePackets(Iterable<Object> packets) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Make a packet to send a map to a player
@@ -76,5 +81,9 @@ public interface VersionAdapter {
      * @param loc    The location to spawn the particle at
      */
     void spawnBarrierParticle(Player player, Location loc);
+
+    int nextEntityId();
+
+    boolean supportsVersion(MinecraftVersion version);
 
 }

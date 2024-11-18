@@ -3,7 +3,6 @@ package dev.cerus.maps.plugin.map;
 import dev.cerus.maps.api.Frame;
 import dev.cerus.maps.api.MapScreen;
 import dev.cerus.maps.api.version.VersionAdapter;
-import dev.cerus.maps.util.EntityIdUtil;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -13,6 +12,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
@@ -26,80 +26,89 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 class MapScreenStorage {
 
-    static Optional<Integer> determineVersion(final ConfigurationSection section) {
+    private static final Pattern UUID_PATTERN = Pattern.compile("[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}", Pattern.CASE_INSENSITIVE);
+
+    static Optional<Integer> determineVersion(ConfigurationSection section) {
         return section.contains("version") ? Optional.of(section.getInt("version")) : Optional.empty();
     }
 
-    static void storeV1(final ConfigurationSection configuration,
-                        final Map<Integer, MapScreen> screenMap) {
+    static void storeV1(ConfigurationSection configuration,
+                        Map<Integer, MapScreen> screenMap) {
         configuration.set("screens", null);
-        final ConfigurationSection screensSection = configuration.createSection("screens");
+        ConfigurationSection screensSection = configuration.createSection("screens");
         configuration.set("version", 1);
-        for (final Map.Entry<Integer, MapScreen> entry : screenMap.entrySet()) {
-            final int id = entry.getKey();
-            final MapScreen screen = entry.getValue();
+        for (Map.Entry<Integer, MapScreen> entry : screenMap.entrySet()) {
+            int id = entry.getKey();
+            MapScreen screen = entry.getValue();
             if (screen.getFrames() == null) {
                 continue;
             }
 
-            final World world = screen.getFrames()[0][0].getWorld();
-            final List<String> frameList = new ArrayList<>();
+            World world = screen.getFrames()[0][0].getWorld();
+            List<String> frameList = new ArrayList<>();
             for (int x = 0; x < screen.getWidth(); x++) {
                 for (int y = 0; y < screen.getHeight(); y++) {
-                    final Frame frame = screen.getFrames()[x][y];
-                    frameList.add(frame.getPosX() + ";" + frame.getPosY() + ";"
-                            + frame.getPosZ() + "/" + frame.getFacing().name()
-                            + "/" + x + ";" + y + "/" + frame.isVisible() + "/"
-                            + frame.isGlowing());
+                    Frame frame = screen.getFrames()[x][y];
+                    frameList.add("%d;%d;%d/%s/%d;%d/%s/%s".formatted(frame.getPosX(), frame.getPosY(), frame.getPosZ(),
+                            frame.getFacing().name(), x, y, frame.isVisible(), frame.isGlowing()));
                 }
             }
 
-            final ConfigurationSection section = screensSection.createSection(String.valueOf(id));
+            ConfigurationSection section = screensSection.createSection(String.valueOf(id));
             section.set("id", id);
             section.set("width", screen.getWidth());
             section.set("height", screen.getHeight());
-            section.set("world", world.getUID().toString());
+            section.set("refresh", screen.getRefreshRate());
+            section.set("world", world.getName());
             section.set("frames", frameList);
         }
     }
 
-    static void loadV1(final ConfigurationSection configuration,
-                       final VersionAdapter versionAdapter,
-                       final AtomicInteger highestId,
-                       final Map<Integer, MapScreen> screenMap) {
-        final ConfigurationSection screensSection = configuration.getConfigurationSection("screens");
-        for (final String key : screensSection.getKeys(false)) {
-            final ConfigurationSection section = screensSection.getConfigurationSection(key);
-            final int id = section.getInt("id");
-            final int width = section.getInt("width");
-            final int height = section.getInt("height");
+    static void loadV1(ConfigurationSection configuration,
+                       VersionAdapter versionAdapter,
+                       AtomicInteger highestId,
+                       Map<Integer, MapScreen> screenMap) {
+        ConfigurationSection screensSection = configuration.getConfigurationSection("screens");
+        for (String key : screensSection.getKeys(false)) {
+            ConfigurationSection section = screensSection.getConfigurationSection(key);
+            int id = section.getInt("id");
+            int width = section.getInt("width");
+            int height = section.getInt("height");
+            int refreshRate = section.getInt("refresh", 1);
 
-            final UUID worldId = UUID.fromString(section.getString("world"));
-            final World world = Bukkit.getWorld(worldId);
+            String worldStr = section.getString("world");
+            World world;
+            if (UUID_PATTERN.matcher(worldStr).matches()) {
+                UUID worldId = UUID.fromString(worldStr);
+                world = Bukkit.getWorld(worldId);
+            } else {
+                world = Bukkit.getWorld(worldStr);
+            }
 
-            final List<String> framesList = section.getStringList("frames");
-            final Frame[][] frames = new Frame[width][height];
+            List<String> framesList = section.getStringList("frames");
+            Frame[][] frames = new Frame[width][height];
             // - "POSX;POSY;POSZ/FACING/IDX;IDY/VISIBLE"
-            for (final String frameStr : framesList) {
-                final String[] itemSplit = frameStr.split("/");
-                final String[] posSplit = itemSplit[0].split(";");
-                final String[] idSplit = itemSplit[2].split(";");
-                final BlockFace facing = BlockFace.valueOf(itemSplit[1]);
-                final int fx = Integer.parseInt(idSplit[0]);
-                final int fy = Integer.parseInt(idSplit[1]);
+            for (String frameStr : framesList) {
+                String[] itemSplit = frameStr.split("/");
+                String[] posSplit = itemSplit[0].split(";");
+                String[] idSplit = itemSplit[2].split(";");
+                BlockFace facing = BlockFace.valueOf(itemSplit[1]);
+                int fx = Integer.parseInt(idSplit[0]);
+                int fy = Integer.parseInt(idSplit[1]);
                 frames[fx][fy] = new Frame(
                         world,
                         Integer.parseInt(posSplit[0]),
                         Integer.parseInt(posSplit[1]),
                         Integer.parseInt(posSplit[2]),
                         facing,
-                        EntityIdUtil.next(),
+                        versionAdapter.nextEntityId(),
                         itemSplit.length < 4 || Boolean.parseBoolean(itemSplit[3]),
                         itemSplit.length >= 5 && Boolean.parseBoolean(itemSplit[4])
                 );
             }
 
-            final MapScreen mapScreen = new MapScreen(id, versionAdapter, width, height);
+            MapScreen mapScreen = new MapScreen(id, versionAdapter, width, height);
+            mapScreen.setRefreshRate(refreshRate);
             mapScreen.setFrames(frames);
             if (id > highestId.get()) {
                 highestId.set(id);
@@ -108,23 +117,23 @@ class MapScreenStorage {
         }
     }
 
-    static void storeLegacy(final ConfigurationSection configuration,
-                            final Map<Integer, MapScreen> screenMap) {
+    static void storeLegacy(ConfigurationSection configuration,
+                            Map<Integer, MapScreen> screenMap) {
         configuration.set("screens", null);
-        final ConfigurationSection screensSection = configuration.createSection("screens");
+        ConfigurationSection screensSection = configuration.createSection("screens");
         screenLoop:
-        for (final Map.Entry<Integer, MapScreen> entry : screenMap.entrySet()) {
-            final int id = entry.getKey();
-            final MapScreen screen = entry.getValue();
+        for (Map.Entry<Integer, MapScreen> entry : screenMap.entrySet()) {
+            int id = entry.getKey();
+            MapScreen screen = entry.getValue();
             if (screen.getFrameIds() == null) {
                 continue;
             }
 
-            final Entity[][] frames = new Entity[screen.getWidth()][screen.getHeight()];
+            Entity[][] frames = new Entity[screen.getWidth()][screen.getHeight()];
             for (int x = 0; x < screen.getWidth(); x++) {
                 for (int y = 0; y < screen.getHeight(); y++) {
-                    final int fid = screen.getFrameIds()[x][y];
-                    final Entity frame = Bukkit.getWorlds().stream()
+                    int fid = screen.getFrameIds()[x][y];
+                    Entity frame = Bukkit.getWorlds().stream()
                             .flatMap(world -> world.getEntities().stream())
                             .filter(entity -> entity.getEntityId() == fid)
                             .findAny()
@@ -135,54 +144,54 @@ class MapScreenStorage {
                     frames[x][y] = frame;
                 }
             }
-            final World world = frames[0][0].getWorld();
+            World world = frames[0][0].getWorld();
 
-            final ConfigurationSection section = screensSection.createSection(String.valueOf(id));
+            ConfigurationSection section = screensSection.createSection(String.valueOf(id));
             section.set("id", id);
             section.set("width", screen.getWidth());
             section.set("height", screen.getHeight());
             section.set("world", world.getUID().toString());
 
-            final ConfigurationSection framesSection = section.createSection("frames");
+            ConfigurationSection framesSection = section.createSection("frames");
             for (int x = 0; x < screen.getWidth(); x++) {
                 for (int y = 0; y < screen.getHeight(); y++) {
-                    final Entity entity = frames[x][y];
-                    final Chunk chunk = entity.getLocation().getChunk();
+                    Entity entity = frames[x][y];
+                    Chunk chunk = entity.getLocation().getChunk();
                     framesSection.set(entity.getUniqueId().toString(), chunk.getX() + ";" + chunk.getZ() + "|" + x + ";" + y);
                 }
             }
         }
     }
 
-    static void loadLegacy(final ConfigurationSection configuration,
-                           final VersionAdapter versionAdapter,
-                           final JavaPlugin plugin,
-                           final AtomicInteger highestId,
-                           final Map<Integer, MapScreen> screenMap) {
-        final ConfigurationSection screensSection = configuration.getConfigurationSection("screens");
+    static void loadLegacy(ConfigurationSection configuration,
+                           VersionAdapter versionAdapter,
+                           JavaPlugin plugin,
+                           AtomicInteger highestId,
+                           Map<Integer, MapScreen> screenMap) {
+        ConfigurationSection screensSection = configuration.getConfigurationSection("screens");
         screenLoop:
-        for (final String key : screensSection.getKeys(false)) {
-            final ConfigurationSection section = screensSection.getConfigurationSection(key);
-            final int id = section.getInt("id");
-            final int width = section.getInt("width");
-            final int height = section.getInt("height");
+        for (String key : screensSection.getKeys(false)) {
+            ConfigurationSection section = screensSection.getConfigurationSection(key);
+            int id = section.getInt("id");
+            int width = section.getInt("width");
+            int height = section.getInt("height");
             Location location = null;
 
-            final UUID worldId = UUID.fromString(section.getString("world"));
-            final World world = Bukkit.getWorld(worldId);
+            UUID worldId = UUID.fromString(section.getString("world"));
+            World world = Bukkit.getWorld(worldId);
 
-            final Set<Chunk> tempChunkSet = new HashSet<>();
-            final Frame[][] frames = new Frame[width][height];
-            final ConfigurationSection framesSection = section.getConfigurationSection("frames");
-            for (final String frameIdStr : framesSection.getKeys(false)) {
-                final String chunkIdAndPosStr = framesSection.getString(frameIdStr);
-                final String[] chunkIdSplit = chunkIdAndPosStr.split("\\|")[0].split(";");
-                final String[] posSplit = chunkIdAndPosStr.split("\\|")[1].split(";");
+            Set<Chunk> tempChunkSet = new HashSet<>();
+            Frame[][] frames = new Frame[width][height];
+            ConfigurationSection framesSection = section.getConfigurationSection("frames");
+            for (String frameIdStr : framesSection.getKeys(false)) {
+                String chunkIdAndPosStr = framesSection.getString(frameIdStr);
+                String[] chunkIdSplit = chunkIdAndPosStr.split("\\|")[0].split(";");
+                String[] posSplit = chunkIdAndPosStr.split("\\|")[1].split(";");
 
-                final Chunk chunk = world.getChunkAt(Integer.parseInt(chunkIdSplit[0]), Integer.parseInt(chunkIdSplit[1]));
+                Chunk chunk = world.getChunkAt(Integer.parseInt(chunkIdSplit[0]), Integer.parseInt(chunkIdSplit[1]));
                 chunk.load();
 
-                final ItemFrame itemFrame = Arrays.stream(chunk.getEntities())
+                ItemFrame itemFrame = Arrays.stream(chunk.getEntities())
                         .filter(entity -> entity.getUniqueId().toString().equals(frameIdStr))
                         .filter(entity -> entity instanceof ItemFrame)
                         .map(entity -> (ItemFrame) entity)
@@ -212,11 +221,11 @@ class MapScreenStorage {
                 );
                 tempChunkSet.add(chunk);
             }
-            for (final Chunk chunk : tempChunkSet) {
+            for (Chunk chunk : tempChunkSet) {
                 chunk.addPluginChunkTicket(plugin);
             }
 
-            final MapScreen mapScreen = new MapScreen(id, versionAdapter, width, height);
+            MapScreen mapScreen = new MapScreen(id, versionAdapter, width, height);
             mapScreen.setLocation(location);
             mapScreen.setFrames(frames);
             if (id > highestId.get()) {

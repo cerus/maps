@@ -4,6 +4,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.Optional;
+import java.util.function.Predicate;
 
 /**
  * Collection of reflection utility methods
@@ -43,6 +45,41 @@ public class ReflectionUtil {
             }
         }
         return null;
+    }
+
+    public static Optional<Field> findField(final Class<?> cls, Class<?> fieldType) {
+        return findField(cls, fieldType, field -> true);
+    }
+
+    public static Optional<Field> findField(final Class<?> cls, Class<?> fieldType, Predicate<Field> filter) {
+        return findField(cls, f -> f.getType() == fieldType && filter.test(f));
+    }
+
+    public static Optional<Field> findField(final Class<?> cls, Predicate<Field> filter) {
+        for (Field field : cls.getDeclaredFields()) {
+            if (filter.test(field)) {
+                return Optional.of(field);
+            }
+        }
+        return Optional.empty();
+    }
+
+    public static Optional<Class<?>> findClass(String... names) {
+        for (String name : names) {
+            try {
+                return Optional.of(Class.forName(name));
+            } catch (ClassNotFoundException ignored) {
+            }
+        }
+        return Optional.empty();
+    }
+
+    public static Object sneakyGet(Field field, Object instance) {
+        try {
+            return field.get(instance);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }

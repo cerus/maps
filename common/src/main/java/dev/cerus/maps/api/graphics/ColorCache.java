@@ -28,7 +28,6 @@ public class ColorCache {
     public static byte rgbToMap(final int r, final int g, final int b) {
         final int index = new Color(r, g, b, 0).getRGB();
         if (mappedColors[index] == 0) {
-            //mappedColors[index] = (byte) MapColor.rgbToMapColor(r, g, b).getId();
             mappedColors[index] = ColorMaps.current().rgbToMapColor(r, g, b).mapColor();
         }
         return mappedColors[index];

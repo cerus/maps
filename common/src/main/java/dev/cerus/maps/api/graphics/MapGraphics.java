@@ -4,6 +4,7 @@ import dev.cerus.maps.api.colormap.ColorMaps;
 import dev.cerus.maps.api.font.MapFont;
 import dev.cerus.maps.api.font.Sprite;
 import dev.cerus.maps.api.graphics.filter.BoxBlurFilter;
+import dev.cerus.maps.api.graphics.filter.ColorInvertFilter;
 import dev.cerus.maps.api.graphics.filter.Filter;
 import dev.cerus.maps.api.graphics.filter.GrayscaleFilter;
 import dev.cerus.maps.util.Vec2;
@@ -12,16 +13,21 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Deque;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Consumer;
+import java.util.logging.Logger;
 
 /**
  * The 2D rendering engine for maps. Implementations only need to take care of pixel setting and retrieving.
  * <p>
  * This class is huge and should maybe be split into multiple classes, but I haven't found an elegant solution yet.
  *
- * @param <C> The render target (e.g. ClientsideMap)
- * @param <P> The render params
+ * @param <T> The render target (e.g. ClientsideMap)
  */
-public abstract class MapGraphics<C, P> {
+public abstract class MapGraphics<T> {
+
+    private final Lock bufferLock = new ReentrantLock();
 
     /**
      * Creates a new standalone graphics instance
@@ -31,7 +37,7 @@ public abstract class MapGraphics<C, P> {
      *
      * @return New standalone graphics
      */
-    public static MapGraphics<MapGraphics<?, ?>, ?> standalone(final int width, final int height) {
+    public static MapGraphics<MapGraphics<?>> standalone(int width, int height) {
         return newGraphicsObject(width, height);
     }
 
@@ -43,8 +49,21 @@ public abstract class MapGraphics<C, P> {
      *
      * @return New standalone graphics
      */
-    public static MapGraphics<MapGraphics<?, ?>, ?> newGraphicsObject(final int width, final int height) {
+    public static MapGraphics<MapGraphics<?>> newGraphicsObject(int width, int height) {
         return new StandaloneMapGraphics(width, height);
+    }
+
+    /**
+     * Creates a new standalone graphics instance backed by the provided buffer
+     *
+     * @param width  Width of the graphics
+     * @param height Height of the graphics
+     * @param buffer Graphics buffer
+     *
+     * @return New standalone graphics
+     */
+    public static MapGraphics<MapGraphics<?>> wrapBuffer(int width, int height, byte[] buffer) {
+        return new StandaloneMapGraphics(width, height, buffer);
     }
 
     /**
@@ -69,12 +88,12 @@ public abstract class MapGraphics<C, P> {
      * @param atX      The x coordinate where the composition should start
      * @param atY      The y coordinate where the composition should start
      */
-    public void compositeOver(final MapGraphics<?, ?> graphics, final int atX, final int atY) {
+    public void compositeOver(MapGraphics<?> graphics, int atX, int atY) {
         for (int x = 0; x < this.getWidth(); x++) {
             for (int y = 0; y < this.getHeight(); y++) {
                 if (x >= atX && y >= atY && x - atX < graphics.getWidth() && y - atY < graphics.getHeight()
-                        && this.isTransparent(this.getPixel(x, y))
-                        && !graphics.isTransparent(graphics.getPixel(x - atX, y - atY))) {
+                    && this.isTransparent(this.getPixel(x, y))
+                    && !graphics.isTransparent(graphics.getPixel(x - atX, y - atY))) {
                     this.setPixel(x, y, 1F, graphics.getPixel(x - atX, y - atY));
                 }
             }
@@ -103,12 +122,12 @@ public abstract class MapGraphics<C, P> {
      * @param atX      The x coordinate where the composition should start
      * @param atY      The y coordinate where the composition should start
      */
-    public void compositeIn(final MapGraphics<?, ?> graphics, final int atX, final int atY) {
+    public void compositeIn(MapGraphics<?> graphics, int atX, int atY) {
         for (int x = 0; x < this.getWidth(); x++) {
             for (int y = 0; y < this.getHeight(); y++) {
                 if ((x - atX >= graphics.getWidth() || y - atY >= graphics.getHeight())
-                        || (x < atX || y < atY)
-                        || (this.isTransparent(this.getPixel(x, y))
+                    || (x < atX || y < atY)
+                    || (this.isTransparent(this.getPixel(x, y))
                         || graphics.isTransparent(graphics.getPixel(x - atX, y - atY)))) {
                     this.setPixel(x, y, 1F, (byte) 0);
                 }
@@ -138,11 +157,11 @@ public abstract class MapGraphics<C, P> {
      * @param atX      The x coordinate where the composition should start
      * @param atY      The y coordinate where the composition should start
      */
-    public void compositeOut(final MapGraphics<?, ?> graphics, final int atX, final int atY) {
+    public void compositeOut(MapGraphics<?> graphics, int atX, int atY) {
         for (int x = 0; x < this.getWidth(); x++) {
             for (int y = 0; y < this.getHeight(); y++) {
                 if (x >= atX && y >= atY && x - atX < graphics.getWidth() && y - atY < graphics.getHeight()
-                        && !this.isTransparent(graphics.getPixel(x - atX, y - atY))) {
+                    && !this.isTransparent(graphics.getPixel(x - atX, y - atY))) {
                     this.setPixel(x, y, 1F, (byte) 0);
                 }
             }
@@ -171,15 +190,15 @@ public abstract class MapGraphics<C, P> {
      * @param atX      The x coordinate where the composition should start
      * @param atY      The y coordinate where the composition should start
      */
-    public void compositeAtop(final MapGraphics<?, ?> graphics, final int atX, final int atY) {
+    public void compositeAtop(MapGraphics<?> graphics, int atX, int atY) {
         for (int x = 0; x < this.getWidth(); x++) {
             for (int y = 0; y < this.getHeight(); y++) {
                 if (x >= atX && y >= atY && x - atX < graphics.getWidth() && y - atY < graphics.getHeight()) {
                     if (!this.isTransparent(this.getPixel(x, y))
-                            && graphics.isTransparent(graphics.getPixel(x - atX, y - atY))) {
+                        && graphics.isTransparent(graphics.getPixel(x - atX, y - atY))) {
                         this.setPixel(x, y, (byte) 0);
                     } else if (this.isTransparent(this.getPixel(x, y))
-                            && !graphics.isTransparent(graphics.getPixel(x - atX, y - atY))) {
+                               && !graphics.isTransparent(graphics.getPixel(x - atX, y - atY))) {
                         this.setPixel(x, y, graphics.getPixel(x - atX, y - atY));
                     }
                 } else if (!this.isTransparent(this.getPixel(x, y))) {
@@ -211,12 +230,12 @@ public abstract class MapGraphics<C, P> {
      * @param atX      The x coordinate where the composition should start
      * @param atY      The y coordinate where the composition should start
      */
-    public void compositeXor(final MapGraphics<?, ?> graphics, final int atX, final int atY) {
+    public void compositeXor(MapGraphics<?> graphics, int atX, int atY) {
         for (int x = 0; x < this.getWidth(); x++) {
             for (int y = 0; y < this.getHeight(); y++) {
                 if (x >= atX && y >= atY && x - atX < graphics.getWidth() && y - atY < graphics.getHeight()) {
                     if (!graphics.isTransparent(graphics.getPixel(x - atX, y - atY))
-                            && !this.isTransparent(this.getPixel(x, y))) {
+                        && !this.isTransparent(this.getPixel(x, y))) {
                         this.setPixel(x, y, 1F, (byte) 0);
                     } else if (!graphics.isTransparent(graphics.getPixel(x - atX, y - atY))) {
                         this.setPixel(x, y, 1F, graphics.getPixel(x - atX, y - atY));
@@ -226,7 +245,7 @@ public abstract class MapGraphics<C, P> {
         }
     }
 
-    public void fillWithBuffer(final MapGraphics<?, ?> graphics, final float alpha, final boolean ignoreTransparent) {
+    public void fillWithBuffer(MapGraphics<?> graphics, float alpha, boolean ignoreTransparent) {
         int x = 0;
         int y = 0;
         while (y < this.getHeight()) {
@@ -248,7 +267,7 @@ public abstract class MapGraphics<C, P> {
      * @param x        X coordinate
      * @param y        Y coordinate
      */
-    public void place(final MapGraphics<?, ?> graphics, final int x, final int y) {
+    public void place(MapGraphics<?> graphics, int x, int y) {
         this.place(graphics, x, y, 1f);
     }
 
@@ -261,7 +280,7 @@ public abstract class MapGraphics<C, P> {
      * @param y        Y coordinate
      * @param alpha    The alpha value of the contents
      */
-    public void place(final MapGraphics<?, ?> graphics, final int x, final int y, final float alpha) {
+    public void place(MapGraphics<?> graphics, int x, int y, float alpha) {
         this.place(graphics, x, y, alpha, true);
     }
 
@@ -275,36 +294,39 @@ public abstract class MapGraphics<C, P> {
      * @param alpha             The alpha value of the contents
      * @param ignoreTransparent Should transparent pixels not be copied?
      */
-    public void place(final MapGraphics<?, ?> graphics, final int x, final int y, final float alpha, final boolean ignoreTransparent) {
+    public void place(MapGraphics<?> graphics, int x, int y, float alpha, boolean ignoreTransparent) {
         if (x >= this.getWidth() || y >= this.getHeight() || x + graphics.getWidth() < 0 || y + graphics.getWidth() < 0) {
             return;
         }
         if (this.hasDirectAccessCapabilities()
-                && graphics.hasDirectAccessCapabilities()
-                && !ignoreTransparent) {
-            for (int r = y < 0 ? -y : 0; r < (y + graphics.getHeight() >= this.getHeight()
-                    ? this.getHeight() - y
-                    : graphics.getHeight()); r++) {
-                final int srcX = x < 0 ? -x : 0;
-                final int srcW = graphics.getWidth();
-                final int srcH = graphics.getHeight();
-                final int len;
-                if (x + graphics.getWidth() >= this.getWidth()) {
-                    len = this.getWidth() - x;
-                } else if (x < 0) {
-                    len = graphics.getWidth() - (-x);
-                } else {
-                    len = graphics.getWidth();
-                }
+            && graphics.hasDirectAccessCapabilities()
+            && !ignoreTransparent) {
+            useDirectAccessData(bytes -> {
+                for (int r = y < 0 ? -y : 0; r < (y + graphics.getHeight() >= this.getHeight()
+                        ? this.getHeight() - y
+                        : graphics.getHeight()); r++) {
+                    int srcX = x < 0 ? -x : 0;
+                    int srcW = graphics.getWidth();
+                    int srcH = graphics.getHeight();
+                    int len;
+                    if (x + graphics.getWidth() >= this.getWidth()) {
+                        len = this.getWidth() - x;
+                    } else if (x < 0) {
+                        len = graphics.getWidth() - (-x);
+                    } else {
+                        len = graphics.getWidth();
+                    }
 
-                System.arraycopy(
-                        graphics.getDirectAccessData(),
-                        this.index(srcX, r, srcW, srcH) /*r * graphics.getWidth()*/,
-                        this.getDirectAccessData(),
-                        this.index(Math.max(0, x), r + y, this.getWidth(), this.getHeight()) /*x + (r + y) * this.getWidth()*/,
-                        len
-                );
-            }
+                    System.arraycopy(
+                            graphics.getDirectAccessData(),
+                            this.index(srcX, r, srcW, srcH) /*r * graphics.getWidth()*/,
+                            bytes,
+                            this.index(Math.max(0, x), r + y, this.getWidth(), this.getHeight()) /*x + (r + y) * this.getWidth()*/,
+                            len
+                    );
+                }
+            });
+            markAreaDirty(Math.max(0, x), Math.max(0, y), graphics.getWidth() - (Math.max(x, 0)), graphics.getHeight() - (Math.max(y, 0)));
         } else {
             for (int ox = 0; ox < graphics.getWidth(); ox++) {
                 for (int oy = 0; oy < graphics.getHeight(); oy++) {
@@ -317,6 +339,18 @@ public abstract class MapGraphics<C, P> {
     }
 
     /**
+     * Invert the colors of a rectangular area
+     *
+     * @param x      X coordinate
+     * @param y      Y coordinate
+     * @param width  Area width
+     * @param height Area height
+     */
+    public void invertColors(int x, int y, int width, int height) {
+        this.applyFilterToArea(new ColorInvertFilter(), x, y, width, height);
+    }
+
+    /**
      * Grayscale a rectangular area
      *
      * @param x      X coordinate
@@ -324,7 +358,7 @@ public abstract class MapGraphics<C, P> {
      * @param width  Area width
      * @param height Area height
      */
-    public void grayscale(final int x, final int y, final int width, final int height) {
+    public void grayscale(int x, int y, int width, int height) {
         this.applyFilterToArea(new GrayscaleFilter(), x, y, width, height);
     }
 
@@ -336,7 +370,7 @@ public abstract class MapGraphics<C, P> {
      * @param width  Area width
      * @param height Area height
      */
-    public void boxBlur(final int x, final int y, final int width, final int height) {
+    public void boxBlur(int x, int y, int width, int height) {
         this.boxBlur(1, x, y, width, height);
     }
 
@@ -349,7 +383,7 @@ public abstract class MapGraphics<C, P> {
      * @param width                Area width
      * @param height               Area height
      */
-    public void boxBlur(final BoxBlurFilter.TransparencyHandling transparencyHandling, final int x, final int y, final int width, final int height) {
+    public void boxBlur(BoxBlurFilter.TransparencyHandling transparencyHandling, int x, int y, int width, int height) {
         this.boxBlur(1, transparencyHandling, x, y, width, height);
     }
 
@@ -362,7 +396,7 @@ public abstract class MapGraphics<C, P> {
      * @param width  Area width
      * @param height Area height
      */
-    public void boxBlur(final int passes, final int x, final int y, final int width, final int height) {
+    public void boxBlur(int passes, int x, int y, int width, int height) {
         this.boxBlur(passes, BoxBlurFilter.TransparencyHandling.IGNORE, x, y, width, height);
     }
 
@@ -376,12 +410,12 @@ public abstract class MapGraphics<C, P> {
      * @param width                Area width
      * @param height               Area height
      */
-    public void boxBlur(final int passes,
-                        final BoxBlurFilter.TransparencyHandling transparencyHandling,
-                        final int x,
-                        final int y,
-                        final int width,
-                        final int height) {
+    public void boxBlur(int passes,
+                        BoxBlurFilter.TransparencyHandling transparencyHandling,
+                        int x,
+                        int y,
+                        int width,
+                        int height) {
         this.applyFilterToArea(
                 new BoxBlurFilter(passes, transparencyHandling),
                 x,
@@ -400,7 +434,7 @@ public abstract class MapGraphics<C, P> {
      * @param width  Area width
      * @param height Area height
      */
-    public void applyFilterToArea(final Filter filter, final int x, final int y, final int width, final int height) {
+    public void applyFilterToArea(Filter filter, int x, int y, int width, int height) {
         for (int unused = 0; unused < filter.passes(); unused++) {
             for (int ax = 0; ax < width; ax++) {
                 for (int ay = 0; ay < height; ay++) {
@@ -408,6 +442,11 @@ public abstract class MapGraphics<C, P> {
                 }
             }
         }
+    }
+
+    @Deprecated(forRemoval = true)
+    public void fill(int x, int y, byte color, float alpha) {
+        floodFill(x, y, color, alpha);
     }
 
     /**
@@ -420,18 +459,18 @@ public abstract class MapGraphics<C, P> {
      * @param color The color to fill with
      * @param alpha The alpha of the filling color
      */
-    public void fill(final int x, final int y, final byte color, final float alpha) {
-        final Deque<Vec2> queue = new ArrayDeque<>();
+    public void floodFill(int x, int y, byte color, float alpha) {
+        Deque<Vec2> queue = new ArrayDeque<>();
         queue.add(new Vec2(x, y));
-        final byte colorToReplace = this.getPixel(x, y);
+        byte colorToReplace = this.getPixel(x, y);
         if (colorToReplace == color) {
             return;
         }
 
         while (!queue.isEmpty()) {
-            final Vec2 n = queue.pop();
+            Vec2 n = queue.pop();
             if (n.x >= 0 && n.y >= 0 && n.x < this.getWidth() && n.y < this.getHeight()
-                    && this.getPixel(n.x, n.y) == colorToReplace) {
+                && this.getPixel(n.x, n.y) == colorToReplace) {
                 this.setPixel(n.x, n.y, alpha, color);
                 queue.add(new Vec2(n.x - 1, n.y));
                 queue.add(new Vec2(n.x + 1, n.y));
@@ -441,14 +480,20 @@ public abstract class MapGraphics<C, P> {
         }
     }
 
+    @Deprecated
+    public void fillComplete(byte color) {
+        fillBuffer(color);
+    }
+
     /**
      * Fills the whole buffer with a specific color
      *
      * @param color The color to fill the buffer with
      */
-    public void fillComplete(final byte color) {
+    public void fillBuffer(byte color) {
         if (this.hasDirectAccessCapabilities()) {
-            Arrays.fill(this.getDirectAccessData(), color);
+            useDirectAccessData(bytes -> Arrays.fill(bytes, color));
+            markAreaDirty(0, 0, getWidth(), getHeight());
         } else {
             for (int x = 0; x < this.getWidth(); x++) {
                 for (int y = 0; y < this.getHeight(); y++) {
@@ -468,17 +513,20 @@ public abstract class MapGraphics<C, P> {
      * @param color The fill color
      * @param alpha The alpha of the rectangle
      */
-    public void fillRect(final int x, final int y, final int w, final int h, final byte color, final float alpha) {
+    public void fillRect(int x, int y, int w, int h, byte color, float alpha) {
         if (alpha == 0f) {
             return;
         }
         if (this.hasDirectAccessCapabilities() && alpha == 1f) {
-            for (int r = 0; r < h; r++) {
-                Arrays.fill(this.getDirectAccessData(),
-                        Math.max(0, this.index(x, r + y, this.getWidth(), this.getHeight())) /*x + (r + y) * this.getWidth()*/,
-                        Math.min(this.getDirectAccessData().length - 1, this.index(Math.min(this.getWidth(), x + w), r + y, this.getWidth(), this.getHeight())) /*(x + w) + (r + y) * this.getWidth()*/,
-                        color);
-            }
+            useDirectAccessData(bytes -> {
+                for (int r = 0; r < h; r++) {
+                    Arrays.fill(bytes,
+                            Math.max(0, this.index(x, r + y, this.getWidth(), this.getHeight())) /*x + (r + y) * this.getWidth()*/,
+                            Math.min(bytes.length - 1, this.index(Math.min(this.getWidth(), x + w), r + y, this.getWidth(), this.getHeight())) /*(x + w) + (r + y) * this.getWidth()*/,
+                            color);
+                }
+            });
+            markAreaDirty(x, y, w, h);
         } else {
             for (int cx = x; cx < x + w; cx++) {
                 for (int cy = y; cy < y + h; cy++) {
@@ -498,7 +546,7 @@ public abstract class MapGraphics<C, P> {
      * @param color The outline color
      * @param alpha The alpha of the rectangle
      */
-    public void drawRect(final int x, final int y, final int w, final int h, final byte color, final float alpha) {
+    public void drawRect(int x, int y, int w, int h, byte color, float alpha) {
         this.drawLineX(x, x + w, y, color, alpha);
         this.drawLineX(x, x + w, y + h, color, alpha);
         this.drawLineY(y, y + h, x, color, alpha);
@@ -515,7 +563,7 @@ public abstract class MapGraphics<C, P> {
      * @param color The outline color
      * @param alpha The alpha of the rectangle
      */
-    public void drawLine(final int x1, final int y1, final int x2, final int y2, final byte color, final float alpha) {
+    public void drawLine(int x1, int y1, int x2, int y2, byte color, float alpha) {
         if (x1 == x2) {
             this.drawLineY(y1, y2, x1, color, alpha);
             return;
@@ -527,12 +575,15 @@ public abstract class MapGraphics<C, P> {
         this.drawLine(new Vec2(x1, y1), new Vec2(x2, y2), color, alpha);
     }
 
-    protected void drawLineX(final int x1, final int x2, final int y, final byte color, final float alpha) {
+    protected void drawLineX(int x1, int x2, int y, byte color, float alpha) {
         if (this.hasDirectAccessCapabilities() && alpha == 1f) {
-            Arrays.fill(this.getDirectAccessData(),
-                    this.index(Math.min(x1, x2), y, this.getWidth(), this.getHeight()) /*Math.min(x1, x2) + y * this.getWidth()*/,
-                    this.index(Math.max(x1, x2), y, this.getWidth(), this.getHeight()) /*Math.max(x1, x2) + y * this.getWidth()*/,
-                    color);
+            useDirectAccessData(bytes -> {
+                Arrays.fill(bytes,
+                        this.index(Math.min(x1, x2), y, this.getWidth(), this.getHeight()) /*Math.min(x1, x2) + y * this.getWidth()*/,
+                        this.index(Math.max(x1, x2), y, this.getWidth(), this.getHeight()) /*Math.max(x1, x2) + y * this.getWidth()*/,
+                        color);
+            });
+            markAreaDirty(Math.min(x1, x2), y, Math.max(x1, x2) - Math.min(x1, x2), 1);
         } else {
             for (int x = Math.min(x1, x2); x <= Math.max(x1, x2); x++) {
                 this.setPixel(x, y, alpha, color);
@@ -540,7 +591,7 @@ public abstract class MapGraphics<C, P> {
         }
     }
 
-    protected void drawLineY(final int y1, final int y2, final int x, final byte color, final float alpha) {
+    protected void drawLineY(int y1, int y2, int x, byte color, float alpha) {
         for (int y = Math.min(y1, y2); y <= Math.max(y1, y2); y++) {
             this.setPixel(x, y, alpha, color);
         }
@@ -554,9 +605,9 @@ public abstract class MapGraphics<C, P> {
      * @param color The outline color
      * @param alpha The alpha of the rectangle
      */
-    public void drawLine(final Vec2 v1, final Vec2 v2, final byte color, final float alpha) {
-        final Vec2[] arr = this.lerpVecArr(v1, v2);
-        for (final Vec2 p : arr) {
+    public void drawLine(Vec2 v1, Vec2 v2, byte color, float alpha) {
+        Vec2[] arr = this.lerpVecArr(v1, v2);
+        for (Vec2 p : arr) {
             this.setPixel(p.x, p.y, alpha, color);
         }
     }
@@ -564,16 +615,16 @@ public abstract class MapGraphics<C, P> {
     /**
      * Perform linear interpolation calculations
      * <p>
-     * All the line math was taken from https://www.redblobgames.com/grids/line-drawing.html
+     * All the line math was taken from <a href="https://www.redblobgames.com/grids/line-drawing.html">here</a>
      *
      * @param start Start
      * @param end   End
      *
      * @return Array of points between start and end
      */
-    private Vec2[] lerpVecArr(final Vec2 start, final Vec2 end) {
-        final int len = this.dist(start, end);
-        final Vec2[] arr = new Vec2[len];
+    private Vec2[] lerpVecArr(Vec2 start, Vec2 end) {
+        int len = this.dist(start, end);
+        Vec2[] arr = new Vec2[len];
 
         for (int i = 0; i < len; i++) {
             arr[i] = this.lerpVec(start, end, (float) i / (float) len);
@@ -582,23 +633,23 @@ public abstract class MapGraphics<C, P> {
         return arr;
     }
 
-    private Vec2 lerpVec(final Vec2 start, final Vec2 end, final float t) {
+    private Vec2 lerpVec(Vec2 start, Vec2 end, float t) {
         return new Vec2(this.round(this.lerp(start.x, end.x, t)), this.round(this.lerp(start.y, end.y, t)));
     }
 
-    private float lerp(final int start, final int end, final float t) {
+    private float lerp(int start, int end, float t) {
         return start + t * (end - start);
     }
 
     // 2D distance
-    private int dist(final Vec2 v1, final Vec2 v2) {
+    private int dist(Vec2 v1, Vec2 v2) {
         return (int) (Math.pow(v1.x - v2.x, 2) + Math.pow(v1.y - v2.y, 2));
     }
 
     // Pretty much useless
-    private int round(final float f) {
-        final int i = (int) f;
-        final float rem = f - i;
+    private int round(float f) {
+        int i = (int) f;
+        float rem = f - i;
         return rem < 0.5f ? i : i + 1;
     }
 
@@ -609,12 +660,12 @@ public abstract class MapGraphics<C, P> {
      * @param x   The x coordinate where the image should be drawn
      * @param y   The y coordinate where the image should be drawn
      */
-    public void drawImage(final BufferedImage img, final int x, final int y) {
+    public void drawImage(BufferedImage img, int x, int y) {
         for (int ix = 0; ix < img.getWidth(); ix++) {
             for (int iy = 0; iy < img.getHeight(); iy++) {
-                final Color color = new Color(img.getRGB(ix, iy), img.getColorModel().hasAlpha());
-                final float alpha = img.getColorModel().hasAlpha() ? color.getAlpha() / 255f : 1f;
-                final byte mapColor = ColorCache.rgbToMap(color.getRed(), color.getGreen(), color.getBlue());
+                Color color = new Color(img.getRGB(ix, iy), img.getColorModel().hasAlpha());
+                float alpha = img.getColorModel().hasAlpha() ? color.getAlpha() / 255f : 1f;
+                byte mapColor = ColorCache.rgbToMap(color.getRed(), color.getGreen(), color.getBlue());
                 this.setPixel(x + ix, y + iy, alpha, mapColor);
             }
         }
@@ -629,7 +680,7 @@ public abstract class MapGraphics<C, P> {
      * @param color The color
      * @param size  The size multiplier (1 = normal)
      */
-    public void drawText(final int x, final int y, final String text, final byte color, final int size) {
+    public void drawText(int x, int y, String text, byte color, int size) {
         this.drawText(x, y, text, MapFont.MINECRAFT_FONT, color, size);
     }
 
@@ -645,20 +696,37 @@ public abstract class MapGraphics<C, P> {
      * @param color The color
      * @param size  The size multiplier (1 = normal)
      */
-    public void drawText(int x, int y, final String text, final MapFont font, final byte color, final int size) {
+    public void drawText(int x, int y, String text, MapFont font, byte color, int size) {
+        drawText(x, y, text, font, color, size, 1f);
+    }
+
+    /**
+     * Draws text
+     * <p>
+     * This method was originally copied from Bukkit. It has been heavily modified since then to fit our needs.
+     *
+     * @param x     X coordinate
+     * @param y     Y coordinate
+     * @param text  The text
+     * @param font  The font
+     * @param color The color
+     * @param size  The size multiplier (1 = normal)
+     * @param alpha The alpha value of the color
+     */
+    public void drawText(int x, int y, String text, MapFont font, byte color, int size, float alpha) {
         if (size <= 0) {
             throw new IllegalArgumentException("size <= 0");
         }
-        final String textWithoutLinefeed = text == null ? "" : text.replace("\n", "");
-        if (textWithoutLinefeed.length() == 0) {
+        String textWithoutLinefeed = text == null ? "" : text.replace("\n", "");
+        if (textWithoutLinefeed.isBlank()) {
             return;
         }
         if (!font.isValid(textWithoutLinefeed)) {
             throw new IllegalArgumentException("Invalid text");
         }
 
-        final int xStart = x;
-        final int[] codePoints = text.codePoints().toArray();
+        int xStart = x;
+        int[] codePoints = text.codePoints().toArray();
         int currentIndex = 0;
 
         while (true) {
@@ -666,20 +734,20 @@ public abstract class MapGraphics<C, P> {
                 return;
             }
 
-            final int cp = codePoints[currentIndex];
+            int cp = codePoints[currentIndex];
             if (cp == '\n') {
                 // Increment y if the char is a line separator
                 x = xStart;
                 y += font.getHeight() + 1;
             } else {
                 // Draw text if the character is not a special character
-                final Sprite sprite = font.get(cp);
+                Sprite sprite = font.get(cp);
                 for (int row = 0; row < font.getHeight(); ++row) {
                     for (int col = 0; col < sprite.getWidth(); ++col) {
                         if (sprite.get(row, col)) {
                             for (int eX = 0; eX < size; eX++) {
                                 for (int eY = 0; eY < size; eY++) {
-                                    this.setPixel(x + (size * col) + (eX), y + (size * row) + (eY), color);
+                                    this.setPixel(x + (size * col) + (eX), y + (size * row) + (eY), alpha, color);
                                 }
                             }
                         }
@@ -694,7 +762,7 @@ public abstract class MapGraphics<C, P> {
         }
     }
 
-    public void drawEllipse(final int atX, final int atY, final int widthRad, final int heightRad, final byte color) {
+    public void drawEllipse(int atX, int atY, int widthRad, int heightRad, byte color) {
         this.drawEllipse(atX, atY, widthRad, heightRad, color, 1f);
     }
 
@@ -710,18 +778,18 @@ public abstract class MapGraphics<C, P> {
      * @param color     Color of the ellipse
      * @param alpha     Alpha of the ellipse
      */
-    public void drawEllipse(final int atX,
-                            final int atY,
-                            final int widthRad,
-                            final int heightRad,
-                            final byte color,
-                            final float alpha) {
+    public void drawEllipse(int atX,
+                            int atY,
+                            int widthRad,
+                            int heightRad,
+                            byte color,
+                            float alpha) {
         float dx, dy, d1, d2, x, y;
         x = 0;
         y = heightRad;
 
         d1 = (heightRad * heightRad) - (widthRad * widthRad * heightRad) +
-                (0.25f * widthRad * widthRad);
+             (0.25f * widthRad * widthRad);
         dx = 2 * heightRad * heightRad * x;
         dy = 2 * widthRad * widthRad * y;
 
@@ -741,8 +809,8 @@ public abstract class MapGraphics<C, P> {
         }
 
         d2 = ((heightRad * heightRad) * ((x + 0.5f) * (x + 0.5f)))
-                + ((widthRad * widthRad) * ((y - 1) * (y - 1)))
-                - (widthRad * widthRad * heightRad * heightRad);
+             + ((widthRad * widthRad) * ((y - 1) * (y - 1)))
+             - (widthRad * widthRad * heightRad * heightRad);
 
         while (y >= 0) {
             this.drawEllipseInternal(atX, atY, color, x, y, alpha);
@@ -760,7 +828,7 @@ public abstract class MapGraphics<C, P> {
         }
     }
 
-    private void drawEllipseInternal(final int atX, final int atY, final byte color, final float x, final float y, final float alpha) {
+    private void drawEllipseInternal(int atX, int atY, byte color, float x, float y, float alpha) {
         this.setPixel((int) (x + atX), (int) (y + atY), alpha, color);
         this.setPixel((int) (-x + atX), (int) (y + atY), alpha, color);
         this.setPixel((int) (x + atX), (int) (-y + atY), alpha, color);
@@ -773,7 +841,7 @@ public abstract class MapGraphics<C, P> {
      * @param colorToReplace The color to replace
      * @param color          The color to replace the other color with
      */
-    public void replace(final byte colorToReplace, final byte color) {
+    public void replace(byte colorToReplace, byte color) {
         for (int x = 0; x < this.getWidth(); x++) {
             for (int y = 0; y < this.getHeight(); y++) {
                 if (this.getPixel(x, y) == colorToReplace) {
@@ -792,7 +860,7 @@ public abstract class MapGraphics<C, P> {
      *
      * @return The old pixel color. Might return the specified color if the method does not end up setting the pixel.
      */
-    public byte setPixel(final int x, final int y, final byte color) {
+    public byte setPixel(int x, int y, byte color) {
         return this.setPixel(x, y, 1f, color);
     }
 
@@ -816,7 +884,7 @@ public abstract class MapGraphics<C, P> {
      *
      * @return The pixels color
      */
-    public abstract byte getPixel(final int x, final int y);
+    public abstract byte getPixel(int x, int y);
 
     /**
      * Composite two colors together
@@ -829,7 +897,7 @@ public abstract class MapGraphics<C, P> {
      *
      * @return The composited color
      */
-    protected byte calculateComposite(final byte source, final byte dest, final float alpha) {
+    protected byte calculateComposite(byte source, byte dest, float alpha) {
         if (alpha <= 0f) {
             return dest;
         } else if (alpha >= 1f) {
@@ -843,16 +911,13 @@ public abstract class MapGraphics<C, P> {
             }
 
             return CompositeColorCache.getCompositeOrCompute(source, dest, alpha, () -> {
-                //final Color newColor = MapColor.mapColorToRgb(source);
-                //final Color oldColor = MapColor.mapColorToRgb(dest);
-                final Color newColor = ColorMaps.current().mapColorToRgb(source);
-                final Color oldColor = ColorMaps.current().mapColorToRgb(dest);
-                final int[] compositedColor = new int[] {
+                Color newColor = ColorMaps.current().mapColorToRgb(source);
+                Color oldColor = ColorMaps.current().mapColorToRgb(dest);
+                return ColorCache.rgbToMap(
                         this.composite(newColor.getRed(), oldColor.getRed(), alpha),
                         this.composite(newColor.getGreen(), oldColor.getGreen(), alpha),
                         this.composite(newColor.getBlue(), oldColor.getBlue(), alpha)
-                };
-                return ColorCache.rgbToMap(compositedColor[0], compositedColor[1], compositedColor[2]);
+                );
             });
         }
     }
@@ -880,9 +945,9 @@ public abstract class MapGraphics<C, P> {
      *
      * @return New component
      */
-    protected int composite(final int comp1, final int comp2, final float a) {
-        final float c1 = comp1 / 255f;
-        final float c2 = comp2 / 255f;
+    protected int composite(int comp1, int comp2, float a) {
+        float c1 = comp1 / 255f;
+        float c2 = comp2 / 255f;
         return (int) ((c1 * a + c2 * (1f - a)) * 255f);
     }
 
@@ -900,37 +965,33 @@ public abstract class MapGraphics<C, P> {
      *
      * @return True if transparent
      */
-    public boolean isTransparent(final byte color) {
+    public boolean isTransparent(byte color) {
         return color == 0;
     }
 
-    protected float normalizeAlpha(final float a) {
-        return Math.max(0f, Math.min(1f, a));
+    protected float normalizeAlpha(float a) {
+        a = Math.max(0f, Math.min(1f, a));
+        a = ((int) (a * 100)) / 100f;
+        return a;
     }
 
-    /**
-     * Basically copies this buffer onto the buffer of the specified render target
-     *
-     * @param renderTarget The render target
-     */
-    public void renderOnto(final C renderTarget) {
-        this.renderOnto(renderTarget, null);
-    }
+    public abstract void markAreaDirty(int x, int y, int w, int h);
 
     /**
-     * Basically copies this buffer onto the buffer of the specified render target
+     * Copy the data of this graphics object to the render target.
+     * <p>
+     * Depending on the implementation this method might do nothing or fire a {@link UnsupportedOperationException}.
      *
-     * @param renderTarget The render target
-     * @param params       The render parameters
+     * @throws UnsupportedOperationException if the underlying implementation does not have a fixed render target
      */
-    public abstract void renderOnto(C renderTarget, P params);
+    public abstract void draw();
 
     /**
      * Make a copy of this buffer
      *
-     * @return A copy of this buffer
+     * @return A copy
      */
-    public abstract MapGraphics<C, P> copy();
+    public abstract MapGraphics<T> copy();
 
     /**
      * Get the width in pixels of this buffer
@@ -946,20 +1007,36 @@ public abstract class MapGraphics<C, P> {
      */
     public abstract int getHeight();
 
+    public Lock bufferLock() {
+        return bufferLock;
+    }
+
+    public void useDirectAccessData(Consumer<byte[]> action) {
+        if (!hasDirectAccessCapabilities()) {
+            return;
+        }
+        try {
+            bufferLock().lock();
+            action.accept(getDirectAccessData());
+        } finally {
+            bufferLock().unlock();
+        }
+    }
+
     public boolean hasDirectAccessCapabilities() {
         return this.getDirectAccessData() != null;
     }
 
-    public byte[] getDirectAccessData() {
+    public synchronized byte[] getDirectAccessData() {
         return null;
     }
 
-    public int index(final int x, final int y) {
+    public int index(int x, int y) {
         return this.index(x, y, this.getWidth(), this.getHeight());
     }
 
-    public int index(final int x, final int y, final int w, final int h) {
-        return x + y * Math.max(w, h);
+    public int index(int x, int y, int w, int h) {
+        return x + y * w;
     }
 
 }

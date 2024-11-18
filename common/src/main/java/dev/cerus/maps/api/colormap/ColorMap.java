@@ -86,7 +86,10 @@ public class ColorMap {
         return this.colors;
     }
 
-    public record Color(byte mapColor, java.awt.Color javaColor) {
+    public record Color(byte mapColor, int mapColorInt, java.awt.Color javaColor) {
+        public Color(int mapColor, java.awt.Color javaColor) {
+            this((byte) mapColor, mapColor, javaColor);
+        }
 
         @Override
         public boolean equals(final Object o) {

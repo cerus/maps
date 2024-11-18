@@ -1,30 +1,33 @@
 package dev.cerus.maps.api.graphics;
 
-import dev.cerus.maps.util.Vec2;
-
 /**
  * Graphics implementation that's completely standalone and versatile. Could be used for sprites for example.
  */
-public class StandaloneMapGraphics extends MapGraphics<MapGraphics<?, ?>, Vec2> {
+public class StandaloneMapGraphics extends MapGraphics<MapGraphics<?>> {
 
     private final int width;
     private final int height;
-    private final byte[] data;
+    private byte[] data;
 
-    public StandaloneMapGraphics(final int width, final int height) {
-        this.width = width;
-        this.height = height;
-        this.data = new byte[Math.max(width, height) * Math.max(width, height)];
+    public StandaloneMapGraphics(int width, int height) {
+        this(width, height, new byte[width * height]);
     }
 
-    public static StandaloneMapGraphics copyOf(final MapGraphics<?, ?> graphics) {
+    public StandaloneMapGraphics(int width, int height, byte[] data) {
+        this.width = width;
+        this.height = height;
+        setDirectAccessData(data);
+    }
+
+    public static StandaloneMapGraphics copyOf(MapGraphics<?> graphics) {
         if (!graphics.hasDirectAccessCapabilities()) {
             throw new IllegalArgumentException("Graphics needs direct access capabilities");
         }
 
-        final StandaloneMapGraphics out = new StandaloneMapGraphics(graphics.getWidth(), graphics.getHeight());
+        StandaloneMapGraphics out = new StandaloneMapGraphics(graphics.getWidth(), graphics.getHeight());
+        graphics.bufferLock().lock();
         for (int r = 0; r < out.height; r++) {
-            final int pos = out.index(0, r, out.width, out.height);
+            int pos = out.index(0, r, out.width, out.height);
             System.arraycopy(
                     graphics.getDirectAccessData(),
                     pos,
@@ -33,56 +36,57 @@ public class StandaloneMapGraphics extends MapGraphics<MapGraphics<?, ?>, Vec2> 
                     out.width
             );
         }
+        graphics.bufferLock().unlock();
         return out;
     }
 
     @Override
-    public byte setPixel(final int x, final int y, final float alpha, final byte color) {
+    public byte setPixel(int x, int y, float alpha, byte color) {
         // Lots of bounds and alpha checking
-        final float normAlpha = this.normalizeAlpha(alpha);
+        float normAlpha = this.normalizeAlpha(alpha);
         if (x < 0 || x >= this.width || y < 0 || y >= this.height || normAlpha == 0f) {
             return color;
         }
 
         // More compositing
-        final byte actualColor = normAlpha == 1f ? color : this.calculateComposite(color, this.getPixel(x, y), normAlpha);
+        byte actualColor = normAlpha == 1f ? color : this.calculateComposite(color, this.getPixel(x, y), normAlpha);
         if (this.getPixel(x, y) == actualColor) {
             return color;
         }
         return this.setPixelInternal(x, y, actualColor);
     }
 
-    private byte setPixelInternal(final int x, final int y, final byte color) {
-        final byte bef = this.getPixel(x, y);
+    private byte setPixelInternal(int x, int y, byte color) {
+        byte bef = this.getPixel(x, y);
         this.data[this.index(x, y, this.width, this.height)] = color;
         return bef;
     }
 
     @Override
-    public byte getPixel(final int x, final int y) {
+    public byte getPixel(int x, int y) {
         if (x < 0 || x >= this.width || y < 0 || y >= this.height) {
             return 0;
         }
         return this.getPixelDirect(x, y);
     }
 
-    private byte getPixelDirect(final int x, final int y) {
+    private byte getPixelDirect(int x, int y) {
         //return this.data[x * this.height + y];
         return this.data[this.index(x, y, this.width, this.height)];
     }
 
     @Override
-    public void renderOnto(final MapGraphics<?, ?> renderTarget, final Vec2 params) {
-        for (int x = 0; x < this.width; x++) {
-            for (int y = 0; y < this.height; y++) {
-                renderTarget.setPixel(params.x + x, params.y + y, this.getPixel(x, y));
-            }
-        }
+    public void markAreaDirty(int x, int y, int w, int h) {
     }
 
     @Override
-    public MapGraphics<MapGraphics<?, ?>, Vec2> copy() {
-        final StandaloneMapGraphics copy = new StandaloneMapGraphics(this.width, this.height);
+    public void draw() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public MapGraphics<MapGraphics<?>> copy() {
+        StandaloneMapGraphics copy = new StandaloneMapGraphics(this.width, this.height);
         for (int x = 0; x < this.width; x++) {
             for (int y = 0; y < this.height; y++) {
                 copy.setPixelInternal(x, y, this.getPixelDirect(x, y));
@@ -92,8 +96,15 @@ public class StandaloneMapGraphics extends MapGraphics<MapGraphics<?, ?>, Vec2> 
     }
 
     @Override
-    public byte[] getDirectAccessData() {
+    public synchronized byte[] getDirectAccessData() {
         return this.data;
+    }
+
+    public void setDirectAccessData(byte[] data) {
+        if (data.length != width * height) {
+            throw new IllegalArgumentException("data.length != width * height");
+        }
+        this.data = data;
     }
 
     @Override

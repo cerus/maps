@@ -7,11 +7,15 @@ import dev.cerus.maps.api.ClientsideMap;
 import dev.cerus.maps.api.Frame;
 import dev.cerus.maps.api.version.PacketListener;
 import dev.cerus.maps.api.version.VersionAdapter;
+import dev.cerus.maps.util.MinecraftVersion;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -19,6 +23,8 @@ import net.minecraft.network.NetworkManager;
 import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.network.chat.IChatBaseComponent;
 import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientboundBundlePacket;
+import net.minecraft.network.protocol.game.PacketListenerPlayOut;
 import net.minecraft.network.protocol.game.PacketPlayOutEntityDestroy;
 import net.minecraft.network.protocol.game.PacketPlayOutEntityMetadata;
 import net.minecraft.network.protocol.game.PacketPlayOutMap;
@@ -27,11 +33,13 @@ import net.minecraft.network.syncher.DataWatcher;
 import net.minecraft.network.syncher.DataWatcherRegistry;
 import net.minecraft.server.network.PlayerConnection;
 import net.minecraft.server.network.ServerCommonPacketListenerImpl;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.level.saveddata.maps.MapIcon;
 import net.minecraft.world.level.saveddata.maps.MapId;
 import net.minecraft.world.level.saveddata.maps.WorldMap;
 import net.minecraft.world.phys.Vec3D;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
@@ -44,7 +52,21 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public class VersionAdapter21R1 implements VersionAdapter {
 
+    private final AtomicInteger entityIdHolder;
     private Field netManField;
+
+    public VersionAdapter21R1() {
+        Field entityIdField = Arrays.stream(Entity.class.getDeclaredFields())
+                .filter(field -> Modifier.isStatic(field.getModifiers()))
+                .filter(field -> field.getType() == AtomicInteger.class)
+                .findFirst().orElseThrow();
+        entityIdField.setAccessible(true);
+        try {
+            entityIdHolder = (AtomicInteger) entityIdField.get(null);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     @Override
     public void spawnBarrierParticle(final Player player, final Location loc) {
@@ -52,21 +74,29 @@ public class VersionAdapter21R1 implements VersionAdapter {
     }
 
     @Override
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public Object bundlePackets(Iterable<Object> packets) {
+        return new ClientboundBundlePacket((Iterable<Packet<? super PacketListenerPlayOut>>) (Iterable) packets);
+    }
+
+    @Override
     public Object makeMapPacket(final boolean ignoreBounds, final ClientsideMap map) {
-        final int x = ignoreBounds ? 0 : map.getX();
-        final int y = ignoreBounds ? 0 : map.getY();
-        final int w = ignoreBounds ? 128 : Math.max(1, map.getWidth());
-        final int h = ignoreBounds ? 128 : Math.max(1, map.getHeight());
+        final int x = ignoreBounds ? 0 : map.getBoundsX();
+        final int y = ignoreBounds ? 0 : map.getBoundsY();
+        final int w = ignoreBounds ? 128 : Math.max(1, map.getBoundsWidth());
+        final int h = ignoreBounds ? 128 : Math.max(1, map.getBoundsHeight());
+
+        if (x + w > 128 || y + h > 128) {
+            throw new RuntimeException("Invalid bounds (x=" + x + ", y=" + y + ", w=" + w + ", h=" + h + ")");
+        }
 
         final byte[] data;
-        if (ignoreBounds) {
+        if (ignoreBounds || (w == 128 && h == 128)) {
             data = map.getData();
         } else {
             data = new byte[w * h];
-            for (int xx = 0; xx < w; ++xx) {
-                for (int yy = 0; yy < h; ++yy) {
-                    data[xx + yy * w] = map.getData()[x + xx + (y + yy) * 128];
-                }
+            for (int yy = 0; yy < h; ++yy) {
+                System.arraycopy(map.getData(), x + (y + yy) * 128, data, yy * w, w);
             }
         }
 
@@ -182,4 +212,14 @@ public class VersionAdapter21R1 implements VersionAdapter {
         return (NetworkManager) this.netManField.get(b);
     }
 
+    @Override
+    public int nextEntityId() {
+        return entityIdHolder.incrementAndGet();
+    }
+
+    @Override
+    public boolean supportsVersion(MinecraftVersion version) {
+        return version.greaterThanEquals(MinecraftVersion.RELEASE_1_21)
+               && version.lessThanEquals(MinecraftVersion.RELEASE_1_21_1);
+    }
 }

@@ -31,12 +31,12 @@ public final class ScreenTriangulation {
      *
      * @throws IllegalArgumentException if entity or screen is null
      */
-    public static Vec2 triangulateScreenCoords(final Entity entity, final MapScreen screen) {
+    public static Vec2 triangulateScreenCoords(Entity entity, MapScreen screen) {
         if (entity == null || screen == null) {
             throw new IllegalArgumentException("entity / screen can not be null");
         }
 
-        final Location loc = entity instanceof final LivingEntity le ? le.getEyeLocation() : entity.getLocation();
+        Location loc = entity instanceof LivingEntity le ? le.getEyeLocation() : entity.getLocation();
         return triangulateScreenCoords(loc, screen);
     }
 
@@ -52,16 +52,16 @@ public final class ScreenTriangulation {
      *
      * @throws IllegalArgumentException if location or screen is null
      */
-    public static Vec2 triangulateScreenCoords(final Location location, final MapScreen screen) {
+    public static Vec2 triangulateScreenCoords(Location location, MapScreen screen) {
         if (location == null || screen == null) {
             throw new IllegalArgumentException("location / screen can not be null");
         }
 
-        final Location screenLoc = screen.getLocation();
-        final Frame referenceFrame = screen.getFrames()[0][0];
-        final BlockFace orientation = referenceFrame.getFacing();
-        final float playerYaw = location.getYaw();
-        final float playerPitch = location.getPitch();
+        Location screenLoc = screen.getLocation();
+        Frame referenceFrame = screen.getFrames()[0][0];
+        BlockFace orientation = referenceFrame.getFacing();
+        float playerYaw = location.getYaw();
+        float playerPitch = location.getPitch();
 
         // Prevent useless calculations if the player is not looking at the screen
         if (!isInFrontOfScreen(orientation, location, screenLoc)
@@ -70,28 +70,28 @@ public final class ScreenTriangulation {
         }
 
         // Distance from screen to player
-        final float frameThickness = referenceFrame.isVisible() ? ITEM_FRAME_THICKNESS : 0f;
-        final double dist = distance(location, screen) - frameThickness;
+        float frameThickness = referenceFrame.isVisible() ? ITEM_FRAME_THICKNESS : 0f;
+        double dist = distance(location, screen) - frameThickness;
 
         // First triangle: Yaw (vertical)
         // Map player yaw to degrees
-        final double yawAlpha = yawDeg(orientation, playerYaw);
-        final double yawAlphaMod = yawDegMod(orientation, playerYaw);
+        double yawAlpha = yawDeg(orientation, playerYaw);
+        double yawAlphaMod = yawDegMod(orientation, playerYaw);
         // Calculate the hypotenuse using side b and angle alpha (yaw)
-        final double hyp = MathUtil.triHypotenuseB(dist, yawAlpha);
+        double hyp = MathUtil.triHypotenuseB(dist, yawAlpha);
         // Calculate side a using the hypotenuse and side b (dist)
-        final double ya = MathUtil.fastSqrt((hyp * hyp) - (dist * dist));
+        double ya = MathUtil.fastSqrt((hyp * hyp) - (dist * dist));
         // Negate side a if required
-        final double yaMod = ya * yawAlphaMod;
+        double yaMod = ya * yawAlphaMod;
 
         // Second triangle: Pitch (horizontal)
         // Calculate side a using side b (hypotenuse from 1st triangle) and angle alpha (pitch)
-        final double pa = MathUtil.triSideA(hyp, pitchDeg(playerPitch));
+        double pa = MathUtil.triSideA(hyp, pitchDeg(playerPitch));
         // Negate side a if required
-        final double paMod = pa * pitchDegMod(playerPitch);
+        double paMod = pa * pitchDegMod(playerPitch);
 
         // Calculate the resulting location
-        final Location resultLoc = location.clone();
+        Location resultLoc = location.clone();
         resultLoc.setY(resultLoc.getY() + paMod);
         switch (orientation) {
             case NORTH -> {
@@ -118,26 +118,26 @@ public final class ScreenTriangulation {
         }
 
         // Calculate the screen coordinates using the resulting location
-        final Location relPos = screen.getHitBox().bottomLeft().clone().subtract(resultLoc);
+        Location relPos = screen.getHitBox().bottomLeft().clone().subtract(resultLoc);
         return switch (orientation) {
             case NORTH -> {
-                final int x = (int) (relPos.getX() * 128d);
-                final int y = (int) ((-relPos.getY()) * 128d);
+                int x = (int) (relPos.getX() * 128d);
+                int y = (int) ((-relPos.getY()) * 128d);
                 yield new Vec2(x, y);
             }
             case EAST -> {
-                final int x = (int) (relPos.getZ() * 128d);
-                final int y = (int) ((-relPos.getY()) * 128d);
+                int x = (int) (relPos.getZ() * 128d);
+                int y = (int) ((-relPos.getY()) * 128d);
                 yield new Vec2(x, y);
             }
             case SOUTH -> {
-                final int x = (int) ((-relPos.getX()) * 128d);
-                final int y = (int) ((-relPos.getY()) * 128d);
+                int x = (int) ((-relPos.getX()) * 128d);
+                int y = (int) ((-relPos.getY()) * 128d);
                 yield new Vec2(x, y);
             }
             case WEST -> {
-                final int x = (int) ((-relPos.getZ()) * 128d);
-                final int y = (int) ((-relPos.getY()) * 128d);
+                int x = (int) ((-relPos.getZ()) * 128d);
+                int y = (int) ((-relPos.getY()) * 128d);
                 yield new Vec2(x, y);
             }
             default -> new Vec2(0, 0);
@@ -154,7 +154,7 @@ public final class ScreenTriangulation {
      *
      * @return The distance on the Z (north &amp; south) or X (east &amp; west) axis
      */
-    public static double distance(final Entity entity, final MapScreen screen) {
+    public static double distance(Entity entity, MapScreen screen) {
         if (entity == null || screen == null) {
             throw new IllegalArgumentException("entity / screen can not be null");
         }
@@ -171,13 +171,13 @@ public final class ScreenTriangulation {
      *
      * @return The distance on the Z (north &amp; south) or X (east &amp; west) axis
      */
-    public static double distance(final Location loc, final MapScreen screen) {
+    public static double distance(Location loc, MapScreen screen) {
         if (loc == null || screen == null) {
             throw new IllegalArgumentException("loc / screen can not be null");
         }
 
-        final Location screenLoc = screen.getLocation();
-        final BlockFace orientation = screen.getFrames()[0][0].getFacing();
+        Location screenLoc = screen.getLocation();
+        BlockFace orientation = screen.getFrames()[0][0].getFacing();
         return (orientation == BlockFace.NORTH || orientation == BlockFace.SOUTH)
                 ? Math.max(loc.getZ(), screenLoc.getZ()) - Math.min(loc.getZ(), screenLoc.getZ())
                 : Math.max(loc.getX(), screenLoc.getX()) - Math.min(loc.getX(), screenLoc.getX());
@@ -190,7 +190,7 @@ public final class ScreenTriangulation {
      *
      * @return the pitch in degrees
      */
-    private static double pitchDeg(final float pitch) {
+    private static double pitchDeg(float pitch) {
         return Math.abs(pitch);
     }
 
@@ -201,7 +201,7 @@ public final class ScreenTriangulation {
      *
      * @return -1 or 1
      */
-    private static double pitchDegMod(final float pitch) {
+    private static double pitchDegMod(float pitch) {
         return pitch >= 0 ? -1f : 1f;
     }
 
@@ -213,7 +213,7 @@ public final class ScreenTriangulation {
      *
      * @return the yaw in degrees
      */
-    private static double yawDeg(final BlockFace orientation, final float yaw) {
+    private static double yawDeg(BlockFace orientation, float yaw) {
         return switch (orientation) {
             case NORTH -> Math.abs(yaw);
             case EAST -> yaw < 90f ? 90f - yaw : yaw - 90f;
@@ -231,7 +231,7 @@ public final class ScreenTriangulation {
      *
      * @return -1 or 1
      */
-    private static double yawDegMod(final BlockFace orientation, final float yaw) {
+    private static double yawDegMod(BlockFace orientation, float yaw) {
         return switch (orientation) {
             case NORTH -> yaw < 0 ? -1f : 1f;
             case EAST -> yaw < 90 ? -1f : 1f;
@@ -250,7 +250,7 @@ public final class ScreenTriangulation {
      *
      * @return true if the location is in front of the MapScreen
      */
-    private static boolean isInFrontOfScreen(final BlockFace orientation, final Location loc, final Location screenLoc) {
+    private static boolean isInFrontOfScreen(BlockFace orientation, Location loc, Location screenLoc) {
         return switch (orientation) {
             case NORTH -> loc.getZ() < screenLoc.getZ();
             case EAST -> loc.getX() > screenLoc.getX();
@@ -268,7 +268,7 @@ public final class ScreenTriangulation {
      *
      * @return true if the yaw value is facing the MapScreen
      */
-    private static boolean isFacingScreen(final BlockFace orientation, final float yaw) {
+    private static boolean isFacingScreen(BlockFace orientation, float yaw) {
         return switch (orientation) {
             case NORTH -> Math.abs(yaw) < 90;
             case EAST -> yaw > 0 && yaw < 180;

@@ -16,6 +16,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v1_21_R1.block.CraftBlock;
 import org.bukkit.craftbukkit.v1_21_R1.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_21_R1.util.CraftMagicNumbers;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 

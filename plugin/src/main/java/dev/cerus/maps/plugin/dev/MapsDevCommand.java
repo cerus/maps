@@ -6,12 +6,15 @@ import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Conditions;
 import co.aikar.commands.annotation.Dependency;
 import co.aikar.commands.annotation.Subcommand;
-import dev.cerus.maps.api.ClientsideMap;
+import dev.cerus.maps.api.MapAccess;
 import dev.cerus.maps.api.MapScreen;
 import dev.cerus.maps.api.Marker;
+import dev.cerus.maps.api.colormap.ColorMap;
+import dev.cerus.maps.api.colormap.ColorMaps;
 import dev.cerus.maps.api.font.FontConverter;
 import dev.cerus.maps.api.font.MapFont;
 import dev.cerus.maps.api.graphics.ColorCache;
+import dev.cerus.maps.api.graphics.MapColors;
 import dev.cerus.maps.api.graphics.MapGraphics;
 import dev.cerus.maps.api.version.VersionAdapter;
 import dev.cerus.maps.plugin.MapsPlugin;
@@ -20,18 +23,24 @@ import dev.cerus.maps.raycast.RayCastUtil;
 import dev.cerus.maps.triangulation.ScreenTriangulation;
 import dev.cerus.maps.util.Vec2;
 import java.awt.Font;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
+import javax.imageio.ImageIO;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Particle;
@@ -51,12 +60,115 @@ public class MapsDevCommand extends BaseCommand {
     @Dependency
     private VersionAdapter versionAdapter;
 
+    @Subcommand("palette")
+    public void handlePalette(Player player, String fileName) {
+        BufferedImage image = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
+
+        Graphics2D graphics = image.createGraphics();
+        java.awt.Color white = MapColors.color(MapColors.color(255, 255, 255));
+        graphics.setColor(white);
+        graphics.fillRect(0, 0, image.getWidth(), image.getHeight());
+        graphics.dispose();
+
+        int x = 0;
+        int y = 0;
+        for (ColorMap.Color color : ColorMaps.current().getColors()) {
+            if (color == null || color.mapColorInt() < 4) {
+                continue;
+            }
+            image.setRGB(x, y, color.javaColor().getRGB());
+            x += 1;
+            if (x >= image.getWidth()) {
+                x = 0;
+                y += 1;
+            }
+        }
+
+        File file = new File(JavaPlugin.getPlugin(MapsPlugin.class).getDataFolder(), fileName.replaceAll("[^A-Za-z0-9_]+", "") + ".png");
+        try {
+            ImageIO.write(image, "png", file);
+        } catch (IOException e) {
+            player.sendMessage(ChatColor.RED + "Failed to capture palette");
+            throw new RuntimeException(e);
+        }
+        player.sendMessage(ChatColor.GREEN + "Palette has been captured");
+    }
+
+    @Subcommand("tearing")
+    public void handleTearing(final Player player, int screenId, int interval) {
+        MapScreen screen = MapScreenRegistry.getScreen(screenId);
+        if (screen == null) {
+            return;
+        }
+
+        MapGraphics<MapAccess> gr = screen.getGraphics();
+        gr.fillBuffer(MapColors.color(0, 0, 255));
+
+        Bukkit.getScheduler().runTaskTimerAsynchronously(JavaPlugin.getPlugin(MapsPlugin.class), new Runnable() {
+            private boolean colorSwitch;
+
+            @Override
+            public void run() {
+                byte color = colorSwitch ? MapColors.color(0, 0, 0) : MapColors.color(255, 255, 255);
+                colorSwitch = !colorSwitch;
+                gr.fillRect(10, 10, gr.getWidth() - 20, gr.getHeight() - 20, color, 1f);
+            }
+        }, interval, interval);
+    }
+
+    @Subcommand("colors")
+    public void handleColors(final Player player, int screenId) {
+        MapScreen screen = MapScreenRegistry.getScreen(screenId);
+        if (screen == null) {
+            return;
+        }
+
+        long colors = Arrays.stream(ColorMaps.current().getColors())
+                .filter(Objects::nonNull)
+                .filter(c -> c.mapColorInt() >= 4)
+                .count();
+        int screenW = screen.getWidth() * 128;
+        int screenH = screen.getHeight() * 128;
+
+        int columns = (int) Math.ceil(Math.sqrt(colors));
+        int rows = (int) Math.ceil((double) colors / (double) columns);
+        int rectW = screenW / columns;
+        int rectH = screenH / rows;
+
+        player.sendMessage("colors: " + colors);
+        player.sendMessage("screenW: " + screenW + " screenH: " + screenH);
+        player.sendMessage("columns: " + columns + " rows: " + rows);
+        player.sendMessage("rectW: " + rectW + " rectH: " + rectH);
+
+        MapGraphics<MapAccess> graphics = screen.getGraphics();
+        graphics.fillBuffer(MapColors.color(255, 255, 255));
+
+        int x = 0;
+        int y = 0;
+        for (ColorMap.Color color : ColorMaps.current().getColors()) {
+            if (color == null || color.mapColorInt() < 4) {
+                continue;
+            }
+            graphics.fillRect(x, y, rectW, rectH, color.mapColor(), 1f);
+            x += rectW;
+            if (x + rectW > screen.getWidth() * 128) {
+                x = 0;
+                y += rectH;
+            }
+            if (y + rectH > screen.getHeight() * 128) {
+                player.sendMessage("Oops, too big");
+                break;
+            }
+        }
+
+        screen.addViewer(player);
+    }
+
     @Subcommand("triangulate2")
     public void handleTriangulate2(final Player player, final boolean once, final boolean verbose) {
         for (final MapScreen screen : MapScreenRegistry.getScreens()) {
-            screen.getGraphics().fillComplete(ColorCache.rgbToMap(255, 255, 255));
-            screen.spawnFrames(player);
-            screen.sendMaps(true);
+            screen.getGraphics().fillBuffer(ColorCache.rgbToMap(255, 255, 255));
+            screen.addViewer(player);
         }
 
         new BukkitRunnable() {
@@ -126,13 +238,13 @@ public class MapsDevCommand extends BaseCommand {
                 if (this.lastPos != null) {
                     this.lastScreen.getGraphics().setPixel(this.lastPos.x, this.lastPos.y, ColorCache.rgbToMap(255, 255, 255));
                     if (this.lastScreen != screen) {
-                        this.lastScreen.sendMaps(false);
+                        this.lastScreen.update();
                     }
                 }
                 screen.getGraphics().setPixel(pos.x, pos.y, ColorCache.rgbToMap(255, 0, 0));
                 this.lastPos = pos;
                 this.lastScreen = screen;
-                screen.sendMaps(false);
+                screen.update();
 
                 if (once) {
                     this.cancel();
@@ -149,8 +261,8 @@ public class MapsDevCommand extends BaseCommand {
         }
 
         if (true) {
-            final MapGraphics<MapScreen, ClientsideMap[][]> graphics = screen.getGraphics();
-            graphics.fillComplete(ColorCache.rgbToMap(255, 255, 255));
+            final MapGraphics<MapAccess> graphics = screen.getGraphics();
+            graphics.fillBuffer(ColorCache.rgbToMap(255, 255, 255));
 
             new BukkitRunnable() {
 
@@ -179,7 +291,7 @@ public class MapsDevCommand extends BaseCommand {
                     }
                     graphics.setPixel(pos.x, pos.y, ColorCache.rgbToMap(255, 0, 0));
                     this.lastPos = pos;
-                    screen.sendMaps(false);
+                    screen.update();
 
                     if (!this.times.isEmpty()) {
                         double avg = this.times.get(0);
@@ -300,7 +412,7 @@ public class MapsDevCommand extends BaseCommand {
             default -> new Vec2(0, 0);
         };
         screen.getGraphics().setPixel(screenPos.x, (screen.getHeight() * 128) - screenPos.y, ColorCache.rgbToMap(255, 0, 0));
-        screen.sendMaps(false);
+        screen.update();
 
         player.sendMessage("Hitbox = " + screen.getHitBox().contains(clickLoc));
         player.sendMessage("Hitbox bl = %,.2f %,.2f %,.2f".formatted(
@@ -372,8 +484,8 @@ public class MapsDevCommand extends BaseCommand {
             return;
         }
 
-        final MapGraphics<MapScreen, ClientsideMap[][]> graphics = screen.getGraphics();
-        graphics.fillComplete((byte) 0);
+        final MapGraphics<MapAccess> graphics = screen.getGraphics();
+        graphics.fillBuffer((byte) 0);
         text = text.replace("\\n", "\n");
         final int width = Arrays.stream(text.split("\n")).mapToInt(mapFont::getWidth).max().orElse(0);
         final int height = Arrays.stream(text.split("\n")).mapToInt(mapFont::getHeight).sum();
@@ -385,7 +497,7 @@ public class MapsDevCommand extends BaseCommand {
                 ColorCache.rgbToMap(255, 255, 255),
                 1
         );
-        screen.sendMaps(true);
+        screen.fullUpdate();
 
         player.sendMessage("W: " + width);
         player.sendMessage("H: " + height);
@@ -402,7 +514,7 @@ public class MapsDevCommand extends BaseCommand {
                 if (player.isSneaking()) {
                     executor.shutdown();
                     if (this.prev != null) {
-                        this.prev.sendMarkers(player);
+                        this.prev.update();
                     }
                     player.sendMessage("Cancel");
                     return;
@@ -411,7 +523,7 @@ public class MapsDevCommand extends BaseCommand {
                 final Optional<RayCastUtil.Result> resultOpt = RayCastUtil.getTargetedScreen(player, 10, MapScreenRegistry.getScreens());
                 if (resultOpt.isEmpty()) {
                     if (this.prev != null) {
-                        this.prev.sendMarkers(player);
+                        this.prev.update();
                         this.prev = null;
                     }
                 } else {
@@ -423,11 +535,11 @@ public class MapsDevCommand extends BaseCommand {
                             (byte) 14, MapCursor.Type.BANNER_WHITE, true
                     );
                     screen.addMarker(marker);
-                    screen.sendMarkers(player);
+                    screen.update();
                     screen.removeMarker(marker);
 
                     if (this.prev != screen && this.prev != null) {
-                        this.prev.sendMarkers(player);
+                        this.prev.update();
                     }
                     this.prev = screen;
                 }
@@ -459,7 +571,7 @@ public class MapsDevCommand extends BaseCommand {
                     (result.targetScreen().getHeight() * 128 - result.screenY()) * 2,
                     (byte) rot, MapCursor.Type.BANNER_WHITE, true)
             );
-            screen.sendMarkers(player);
+            screen.update();
         });
         final long diff = System.nanoTime() - now;
         player.sendMessage(diff + "ns (" + String.format("%.4f", ((double) diff) / ((double) TimeUnit.MILLISECONDS.toNanos(1))) + "ms)");

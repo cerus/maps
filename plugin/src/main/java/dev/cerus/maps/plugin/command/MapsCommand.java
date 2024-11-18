@@ -21,6 +21,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -113,8 +114,8 @@ public class MapsCommand extends BaseCommand {
             return;
         }
 
-        final MapGraphics<?, ?> graphics = mapScreen.getGraphics();
-        graphics.fillComplete((byte) 34);
+        final MapGraphics<?> graphics = mapScreen.getGraphics();
+        graphics.fillBuffer((byte) 34);
         //graphics.fill((byte) 0);
         graphics.drawRect(0, 0, mapScreen.getWidth() * 128 - 1, mapScreen.getHeight() * 128 - 1, (byte) 118, 1f);
         graphics.drawLine(1, 1, mapScreen.getWidth() * 128 - 2, mapScreen.getHeight() * 128 - 2, (byte) 118, 1f);
@@ -125,8 +126,8 @@ public class MapsCommand extends BaseCommand {
         final int height = MinecraftFont.Font.getHeight() * 3;
         graphics.drawText((mapScreen.getWidth() * 128 / 2) - (width / 2), (mapScreen.getHeight() * 128 / 2) - (height / 2), text, (byte) 15, 3);
 
-        mapScreen.spawnFrames(player);
-        mapScreen.sendMaps(true, player);
+        mapScreen.addViewer(player);
+        mapScreen.removeViewer(player, false);
     }
 
     @Subcommand("debugscreen roundrect")
@@ -138,19 +139,19 @@ public class MapsCommand extends BaseCommand {
             return;
         }
 
-        final MapGraphics<?, ?> graphics = mapScreen.getGraphics();
-        graphics.fillComplete(ColorCache.rgbToMap(0, 0, 255));
+        final MapGraphics<?> graphics = mapScreen.getGraphics();
+        graphics.fillBuffer(ColorCache.rgbToMap(0, 0, 255));
         mapScreen.clearMarkers();
 
-        final MapGraphics<MapGraphics<?, ?>, ?> canvas = MapGraphics.standalone(300, 40);
+        final MapGraphics<MapGraphics<?>> canvas = MapGraphics.standalone(300, 40);
 
-        final MapGraphics<MapGraphics<?, ?>, ?> circleTopLeft = MapGraphics.standalone(8, 8);
+        final MapGraphics<MapGraphics<?>> circleTopLeft = MapGraphics.standalone(8, 8);
         circleTopLeft.drawEllipse(7, 7, 7, 7, ColorCache.rgbToMap(232, 232, 232));
-        final MapGraphics<MapGraphics<?, ?>, ?> circleTopRight = MapGraphics.standalone(8, 8);
+        final MapGraphics<MapGraphics<?>> circleTopRight = MapGraphics.standalone(8, 8);
         circleTopRight.drawEllipse(0, 7, 7, 7, ColorCache.rgbToMap(232, 232, 232));
-        final MapGraphics<MapGraphics<?, ?>, ?> circleBottomLeft = MapGraphics.standalone(8, 8);
+        final MapGraphics<MapGraphics<?>> circleBottomLeft = MapGraphics.standalone(8, 8);
         circleBottomLeft.drawEllipse(7, 0, 7, 7, ColorCache.rgbToMap(232, 232, 232));
-        final MapGraphics<MapGraphics<?, ?>, ?> circleBottomRight = MapGraphics.standalone(8, 8);
+        final MapGraphics<MapGraphics<?>> circleBottomRight = MapGraphics.standalone(8, 8);
         circleBottomRight.drawEllipse(0, 0, 7, 7, ColorCache.rgbToMap(232, 232, 232));
 
         canvas.place(circleTopLeft, 0, 0);
@@ -161,14 +162,14 @@ public class MapsCommand extends BaseCommand {
         canvas.drawLine(canvas.getWidth() - 1, 8, canvas.getWidth() - 1, canvas.getHeight() - 8, ColorCache.rgbToMap(232, 232, 232), 1f);
         canvas.drawLine(8, 0, canvas.getWidth() - 8, 0, ColorCache.rgbToMap(232, 232, 232), 1f);
         canvas.drawLine(8, canvas.getHeight() - 1, canvas.getWidth() - 8, canvas.getHeight() - 1, ColorCache.rgbToMap(232, 232, 232), 1f);
-        canvas.fill(canvas.getWidth() / 2, 1, ColorCache.rgbToMap(255, 255, 255), 1f);
+        canvas.floodFill(canvas.getWidth() / 2, 1, ColorCache.rgbToMap(255, 255, 255), 1f);
         //canvas.drawRect(7, 0, canvas.getWidth() - 15, canvas.getHeight() - 1, ColorCache.rgbToMap(255, 255, 255));
 
         //canvas.drawRect(32, 0, canvas.getWidth() - 33, canvas.getHeight() - 1, ColorCache.rgbToMap(255, 0, 0));
         graphics.place(canvas, 64, 64);
 
-        mapScreen.spawnFrames(player);
-        mapScreen.sendMaps(false, player);
+        mapScreen.addViewer(player);
+        mapScreen.removeViewer(player, false);
     }
 
     @Subcommand("debugscreen ellipse")
@@ -180,12 +181,12 @@ public class MapsCommand extends BaseCommand {
             return;
         }
 
-        final MapGraphics<?, ?> graphics = mapScreen.getGraphics();
+        final MapGraphics<?> graphics = mapScreen.getGraphics();
         //graphics.fillComplete(ColorCache.rgbToMap(0, 0, 255));
         mapScreen.clearMarkers();
 
         FunctionalMapGraphics.backedBy(graphics)
-                .with(g -> g.fillComplete(ColorCache.rgbToMap(0, 255, 255)))
+                .with(g -> g.fillBuffer(ColorCache.rgbToMap(0, 255, 255)))
                 .with(g -> g.drawEllipse(
                         mapScreen.getWidth() * 128 / 2,
                         mapScreen.getHeight() * 128 / 2,
@@ -193,7 +194,7 @@ public class MapsCommand extends BaseCommand {
                         (mapScreen.getHeight() * 128 - 128) / 2,
                         ColorCache.rgbToMap(255, 0, 0)
                 ))
-                .with(g -> g.fill(
+                .with(g -> g.floodFill(
                         mapScreen.getWidth() * 128 / 2,
                         mapScreen.getHeight() * 128 / 2,
                         ColorCache.rgbToMap(0, 255, 0),
@@ -213,8 +214,8 @@ public class MapsCommand extends BaseCommand {
                 ColorCache.rgbToMap(0, 255, 0),
                 1f
         );*/
-        mapScreen.spawnFrames(player);
-        mapScreen.sendMaps(false, player);
+        mapScreen.addViewer(player);
+        mapScreen.removeViewer(player, false);
     }
 
     @Subcommand("debugscreen composite")
@@ -228,8 +229,8 @@ public class MapsCommand extends BaseCommand {
 
         long nanoBefore = System.nanoTime();
 
-        final MapGraphics<?, ?> graphics = mapScreen.getGraphics();
-        graphics.fillComplete(ColorCache.rgbToMap(0, 0, 255));
+        final MapGraphics<?> graphics = mapScreen.getGraphics();
+        graphics.fillBuffer(ColorCache.rgbToMap(0, 0, 255));
         mapScreen.clearMarkers();
 
         final StandaloneMapGraphics group = new StandaloneMapGraphics(64 + 32, 64 + 32);
@@ -237,12 +238,12 @@ public class MapsCommand extends BaseCommand {
         final StandaloneMapGraphics blackBox = new StandaloneMapGraphics(64, 64);
         //blackBox.fillComplete(ColorCache.rgbToMap(0, 0, 0));
         blackBox.drawEllipse(32, 32, 31, 31, ColorCache.rgbToMap(0, 0, 0));
-        blackBox.fill(32, 32, ColorCache.rgbToMap(0, 0, 0), 1f);
+        blackBox.floodFill(32, 32, ColorCache.rgbToMap(0, 0, 0), 1f);
 
         final StandaloneMapGraphics whiteBox = new StandaloneMapGraphics(64, 64);
         //whiteBox.fillComplete(ColorCache.rgbToMap(255, 255, 255));
         whiteBox.drawEllipse(32, 32, 31, 31, ColorCache.rgbToMap(255, 255, 255));
-        whiteBox.fill(32, 32, ColorCache.rgbToMap(255, 255, 255), 1f);
+        whiteBox.floodFill(32, 32, ColorCache.rgbToMap(255, 255, 255), 1f);
 
         group.place(blackBox, 0, 0);
         group.compositeIn(whiteBox, 32, 32);
@@ -256,7 +257,7 @@ public class MapsCommand extends BaseCommand {
                 new TextComponent("In")
         ));
 
-        group.fillComplete((byte) 0);
+        group.fillBuffer((byte) 0);
         group.place(blackBox, 0, 0);
         group.compositeOut(whiteBox, 32, 32);
         group.drawRect(0, 0, 64 + 32 - 1, 64 + 32 - 1, ColorCache.rgbToMap(255, 0, 0), 1f);
@@ -269,7 +270,7 @@ public class MapsCommand extends BaseCommand {
                 new TextComponent("Out")
         ));
 
-        group.fillComplete((byte) 0);
+        group.fillBuffer((byte) 0);
         group.place(blackBox, 0, 0);
         group.place(whiteBox, 32, 32);
         group.drawRect(0, 0, 64 + 32 - 1, 64 + 32 - 1, ColorCache.rgbToMap(255, 0, 0), 1f);
@@ -282,7 +283,7 @@ public class MapsCommand extends BaseCommand {
                 new TextComponent("Normal")
         ));
 
-        group.fillComplete((byte) 0);
+        group.fillBuffer((byte) 0);
         group.place(blackBox, 0, 0);
         group.compositeAtop(whiteBox, 32, 32);
         group.drawRect(0, 0, 64 + 32 - 1, 64 + 32 - 1, ColorCache.rgbToMap(255, 0, 0), 1f);
@@ -295,7 +296,7 @@ public class MapsCommand extends BaseCommand {
                 new TextComponent("Atop")
         ));
 
-        group.fillComplete((byte) 0);
+        group.fillBuffer((byte) 0);
         group.place(blackBox, 0, 0);
         group.compositeXor(whiteBox, 32, 32);
         group.drawRect(0, 0, 64 + 32 - 1, 64 + 32 - 1, ColorCache.rgbToMap(255, 0, 0), 1f);
@@ -308,7 +309,7 @@ public class MapsCommand extends BaseCommand {
                 new TextComponent("Xor")
         ));
 
-        group.fillComplete((byte) 0);
+        group.fillBuffer((byte) 0);
         group.place(blackBox, 0, 0);
         group.compositeOver(whiteBox, 32, 32);
         group.drawRect(0, 0, 64 + 32 - 1, 64 + 32 - 1, ColorCache.rgbToMap(255, 0, 0), 1f);
@@ -323,15 +324,14 @@ public class MapsCommand extends BaseCommand {
 
         long nanoAfter = System.nanoTime();
         long nanoDiff = nanoAfter - nanoBefore;
-        player.sendMessage(String.format("Compute took %d ns (%.4f ms)", nanoDiff, ((double) nanoDiff) / TimeUnit.MILLISECONDS.toNanos(1)));
+        player.sendMessage(String.format("Compute took %d ns (%.4f ms, %d micros)", nanoDiff, ((double) nanoDiff) / TimeUnit.MILLISECONDS.toNanos(1), TimeUnit.NANOSECONDS.toMicros(nanoAfter)));
 
         nanoBefore = System.nanoTime();
-        mapScreen.spawnFrames(player);
-        mapScreen.sendMaps(false, player);
+        mapScreen.update();
         nanoAfter = System.nanoTime();
 
         nanoDiff = nanoAfter - nanoBefore;
-        player.sendMessage(String.format("Send took %d ns (%.4f ms)", nanoDiff, ((double) nanoDiff) / TimeUnit.MILLISECONDS.toNanos(1)));
+        player.sendMessage(String.format("Send took %d ns (%.4f ms, %d micros)", nanoDiff, ((double) nanoDiff) / TimeUnit.MILLISECONDS.toNanos(1), TimeUnit.NANOSECONDS.toMicros(nanoAfter)));
     }
 
     @Subcommand("debugscreen alphabench")
@@ -343,9 +343,9 @@ public class MapsCommand extends BaseCommand {
             return;
         }
 
-        final MapGraphics<?, ?> img;
+        final MapGraphics<?> img;
         try {
-            final BufferedImage image = ImageIO.read(new URL("https://cerus.dev/img/edina_lang_logo.png"));
+            final BufferedImage image = ImageIO.read(new URL("https://avatars.githubusercontent.com/u/46848982?v=4"));
             img = StandaloneMapGraphics.newGraphicsObject(image.getWidth(), image.getHeight());
             for (int x = 0; x < image.getWidth(); x++) {
                 for (int y = 0; y < image.getHeight(); y++) {
@@ -365,8 +365,8 @@ public class MapsCommand extends BaseCommand {
 
         long nanoBefore = System.nanoTime();
 
-        final MapGraphics<?, ?> graphics = mapScreen.getGraphics();
-        graphics.fillComplete(ColorCache.rgbToMap(0, 255, 0));
+        final MapGraphics<?> graphics = mapScreen.getGraphics();
+        graphics.fillBuffer(ColorCache.rgbToMap(0, 0, 0));
         mapScreen.clearMarkers();
         graphics.place(img, (graphics.getWidth() / 2) - (img.getWidth() / 2), (graphics.getHeight() / 2) - (img.getHeight() / 2), a);
 
@@ -375,8 +375,8 @@ public class MapsCommand extends BaseCommand {
         player.sendMessage(String.format("Compute took %d ns (%.4f ms)", nanoDiff, ((double) nanoDiff) / TimeUnit.MILLISECONDS.toNanos(1)));
 
         nanoBefore = System.nanoTime();
-        mapScreen.spawnFrames(player);
-        mapScreen.sendMaps(false, player);
+        mapScreen.addViewer(player);
+        mapScreen.removeViewer(player, false);
         nanoAfter = System.nanoTime();
 
         nanoDiff = nanoAfter - nanoBefore;
@@ -400,8 +400,8 @@ public class MapsCommand extends BaseCommand {
             }
         }
         player.sendMessage("§aScreen is now " + (visible ? "§einvisible" : "§dvisible"));
-        screen.despawnFrames(player);
-        screen.spawnFrames(player);
+        screen.despawnFrames(Collections.singleton(player));
+        screen.spawnFrames(screen.getActiveLayer(), Collections.singleton(player));
     }
 
     @Subcommand("screen toggle glow")
@@ -420,8 +420,8 @@ public class MapsCommand extends BaseCommand {
             }
         }
         player.sendMessage("§aScreen is now " + (!glowing ? "§eglowing" : "§dno longer glowing"));
-        screen.despawnFrames(player);
-        screen.spawnFrames(player);
+        screen.despawnFrames(Collections.singleton(player));
+        screen.spawnFrames(screen.getActiveLayer(), Collections.singleton(player));
     }
 
     @Subcommand("screen remove")

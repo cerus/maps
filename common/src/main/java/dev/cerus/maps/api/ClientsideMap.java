@@ -1,15 +1,17 @@
 package dev.cerus.maps.api;
 
+import dev.cerus.maps.api.graphics.ClientsideMapGraphics;
 import dev.cerus.maps.api.graphics.MapGraphics;
 import dev.cerus.maps.api.version.VersionAdapter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 import org.bukkit.entity.Player;
 
 /**
  * A map that is completely clientside
  */
-public class ClientsideMap {
+public class ClientsideMap implements MapAccess {
 
     private static final int WIDTH = 128;
     private static int COUNTER = Integer.MIN_VALUE;
@@ -17,20 +19,31 @@ public class ClientsideMap {
     private final int id;
     private final byte[] data;
     private final List<Marker> markers;
-    private int x;
-    private int y;
-    private int width;
-    private int height;
+    private int boundsX;
+    private int boundsY;
+    private int boundsWidth;
+    private int boundsHeight;
     private boolean dirtyMarkers;
 
     public ClientsideMap() {
         this(COUNTER++);
     }
 
-    public ClientsideMap(final int id) {
+    public ClientsideMap(int id) {
         this.id = id;
         this.data = new byte[WIDTH * WIDTH];
         this.markers = new ArrayList<>();
+    }
+
+    /**
+     * Creates a new graphics object for this clientside map.
+     * <p>
+     * The result of this method call should be stored. It is a waste of resources to constantly allocate and destroy {@link MapGraphics} objects.
+     *
+     * @return a newly allocated {@link MapGraphics} instance
+     */
+    public MapGraphics<ClientsideMap> createGraphics() {
+        return new ClientsideMapGraphics(this);
     }
 
     /**
@@ -39,7 +52,7 @@ public class ClientsideMap {
      * @param versionAdapter The version adapter
      * @param player         The player
      */
-    public void sendTo(final VersionAdapter versionAdapter, final Player player) {
+    public void sendTo(VersionAdapter versionAdapter, Player player) {
         this.sendTo(versionAdapter, false, player);
     }
 
@@ -50,17 +63,8 @@ public class ClientsideMap {
      * @param ignoreBounds   True if the whole map should be sent
      * @param player         The player
      */
-    public void sendTo(final VersionAdapter versionAdapter, final boolean ignoreBounds, final Player player) {
+    public void sendTo(VersionAdapter versionAdapter, boolean ignoreBounds, Player player) {
         versionAdapter.sendPacket(player, versionAdapter.makeMapPacket(ignoreBounds, this));
-    }
-
-    /**
-     * Draw a graphics buffer onto this map
-     *
-     * @param graphics The buffer
-     */
-    public void draw(final MapGraphics<ClientsideMap, ?> graphics) {
-        graphics.renderOnto(this, null);
     }
 
     /**
@@ -68,7 +72,7 @@ public class ClientsideMap {
      *
      * @param marker The marker to add
      */
-    public void addMarker(final Marker marker) {
+    public void addMarker(Marker marker) {
         this.markers.add(marker);
         marker.setParent(this);
         this.dirtyMarkers = true;
@@ -79,7 +83,7 @@ public class ClientsideMap {
      *
      * @param marker The marker to remove
      */
-    public void removeMarker(final Marker marker) {
+    public void removeMarker(Marker marker) {
         if (this.markers.remove(marker)) {
             this.dirtyMarkers = true;
         }
@@ -99,40 +103,40 @@ public class ClientsideMap {
         return this.id;
     }
 
-    public byte[] getData() {
+    public synchronized byte[] getData() {
         return this.data;
     }
 
-    public int getX() {
-        return this.x;
+    public int getBoundsX() {
+        return Math.max(0, this.boundsX);
     }
 
-    public void setX(final int x) {
-        this.x = x;
+    public void setBoundsX(int boundsX) {
+        this.boundsX = boundsX;
     }
 
-    public int getY() {
-        return this.y;
+    public int getBoundsY() {
+        return Math.max(0, this.boundsY);
     }
 
-    public void setY(final int y) {
-        this.y = y;
+    public void setBoundsY(int boundsY) {
+        this.boundsY = boundsY;
     }
 
-    public int getWidth() {
-        return this.width;
+    public int getBoundsWidth() {
+        return boundsWidth;
     }
 
-    public void setWidth(final int width) {
-        this.width = width;
+    public void setBoundsWidth(int boundsWidth) {
+        this.boundsWidth = boundsWidth;
     }
 
-    public int getHeight() {
-        return this.height;
+    public int getBoundsHeight() {
+        return boundsHeight;
     }
 
-    public void setHeight(final int height) {
-        this.height = height;
+    public void setBoundsHeight(int boundsHeight) {
+        this.boundsHeight = boundsHeight;
     }
 
     public List<Marker> getMarkers() {
@@ -143,8 +147,68 @@ public class ClientsideMap {
         return this.dirtyMarkers;
     }
 
-    public void setDirtyMarkers(final boolean dirtyMarkers) {
+    public void setDirtyMarkers(boolean dirtyMarkers) {
         this.dirtyMarkers = dirtyMarkers;
     }
 
+    @Override
+    public void markFullyDirty() {
+        setBoundsX(0);
+        setBoundsY(0);
+        setBoundsWidth(128);
+        setBoundsHeight(128);
+    }
+
+    @Override
+    public void markDirty(int x, int y) {
+        if (x < boundsX || boundsX < 0) {
+            setBoundsX(x);
+        }
+        if (y < boundsY || boundsY < 0) {
+            setBoundsY(y);
+        }
+        if (x >= boundsX + boundsWidth) {
+            setBoundsWidth(x - boundsX + 1);
+        }
+        if (y >= boundsY + boundsHeight) {
+            setBoundsHeight(y - boundsY + 1);
+        }
+    }
+
+    @Override
+    public void clearDirty() {
+        setBoundsX(-1);
+        setBoundsY(-1);
+        setBoundsWidth(0);
+        setBoundsHeight(0);
+    }
+
+    @Override
+    public ClientsideMap getMap(int column, int row) {
+        return this;
+    }
+
+    @Override
+    public Object getMapPacket(VersionAdapter versionAdapter, int column, int row, boolean full) {
+        if (!full && getBoundsHeight() == 0 && getBoundsWidth() == 0) {
+            return null;
+        }
+        return versionAdapter.makeMapPacket(full, this);
+    }
+
+    @Override
+    @Deprecated
+    public MapGraphics<? extends MapAccess> getGraphics() {
+        return createGraphics();
+    }
+
+    @Override
+    public int getWidth() {
+        return 1;
+    }
+
+    @Override
+    public int getHeight() {
+        return 1;
+    }
 }

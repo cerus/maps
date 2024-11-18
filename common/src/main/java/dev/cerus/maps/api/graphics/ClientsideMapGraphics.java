@@ -6,22 +6,27 @@ import dev.cerus.maps.util.Vec2;
 /**
  * Graphics implementation for the clientside map
  */
-public class ClientsideMapGraphics extends MapGraphics<ClientsideMap, Void> {
+public class ClientsideMapGraphics extends MapGraphics<ClientsideMap> {
 
     // Will always be the same unless Mojang changes something (pls don't do that)
     private static final int WIDTH = 128;
 
     private final byte[] data = new byte[WIDTH * WIDTH];
+    private final ClientsideMap parent;
+
+    public ClientsideMapGraphics(ClientsideMap parent) {
+        this.parent = parent;
+    }
 
     @Override
-    public byte setPixel(final int x, final int y, final float alpha, final byte color) {
-        final float normAlpha = this.normalizeAlpha(alpha);
+    public byte setPixel(int x, int y, float alpha, byte color) {
+        float normAlpha = this.normalizeAlpha(alpha);
         if (x < 0 || x >= WIDTH || y < 0 || y >= WIDTH || normAlpha == 0f) {
             return color;
         }
 
         // We do a little compositing
-        final byte actualColor = normAlpha == 1f ? color : this.calculateComposite(color, this.getPixel(x, y), normAlpha);
+        byte actualColor = normAlpha == 1f ? color : this.calculateComposite(color, this.getPixel(x, y), normAlpha);
         if (this.getPixel(x, y) == actualColor) {
             return color;
         }
@@ -29,75 +34,53 @@ public class ClientsideMapGraphics extends MapGraphics<ClientsideMap, Void> {
     }
 
     // Set pixel directly, skip any checks
-    private byte setPixelInternal(final int x, final int y, final byte color) {
-        final byte bef = this.getPixel(x, y);
+    private byte setPixelInternal(int x, int y, byte color) {
+        byte bef = this.getPixel(x, y);
         this.data[this.index(x, y, WIDTH, WIDTH)] = color;
         return bef;
     }
 
     @Override
-    public byte getPixel(final int x, final int y) {
+    public byte getPixel(int x, int y) {
         if (x < 0 || x >= WIDTH || y < 0 || y >= WIDTH) {
             return 0;
         }
         return this.getPixelDirect(x, y);
     }
 
-    private byte getPixelDirect(final int x, final int y) {
+    private byte getPixelDirect(int x, int y) {
         //return this.data[x * this.height + y];
         return this.data[this.index(x, y, WIDTH, WIDTH)];
+    }
+
+    @Override
+    public void markAreaDirty(int x, int y, int w, int h) {
+        parent.markDirty(x, y);
+        parent.markDirty(x + w, y);
+        parent.markDirty(x, y + h);
+        parent.markDirty(x + w, y + h);
     }
 
     /**
      * Copies this buffer onto the buffer of a clientside map. Will also
      * calculate the bounds of the changed contents for optimal packet compression.
      * <p>
-     * See {@link MapGraphics#renderOnto(Object, Object)}
+     * See {@link MapGraphics#draw()}
      */
     @Override
-    public void renderOnto(final ClientsideMap renderTarget, final Void unused) {
-        final Vec2 min = new Vec2(Integer.MAX_VALUE, Integer.MAX_VALUE);
-        final Vec2 max = new Vec2(Integer.MIN_VALUE, Integer.MIN_VALUE);
-
-        for (int x = 0; x < WIDTH; x++) {
-            for (int y = 0; y < WIDTH; y++) {
-                // No need to set the pixel if it's already the same color
-                if (this.getPixel(x, y) == renderTarget.getData()[x + y * WIDTH]) {
-                    continue;
-                }
-
-                // Check and set bounds accordingly
-                if (x < min.x) {
-                    min.x = x;
-                }
-                if (y < min.y) {
-                    min.y = y;
-                }
-                if (x + 1 > max.x) {
-                    max.x = x + 1;
-                }
-                if (y + 1 > max.y) {
-                    max.y = y + 1;
-                }
-
-                renderTarget.getData()[x + y * WIDTH] = this.getPixel(x, y);
-            }
-        }
-
-        // Set the calculated bounds
-        renderTarget.setX(min.x == Integer.MAX_VALUE ? 0 : min.x);
-        renderTarget.setY(min.y == Integer.MAX_VALUE ? 0 : min.y);
-        renderTarget.setWidth(max.x == Integer.MIN_VALUE ? 0 : max.x - min.x);
-        renderTarget.setHeight(max.y == Integer.MIN_VALUE ? 0 : max.y - min.y);
+    public void draw() {
+        bufferLock().lock();
+        System.arraycopy(data, 0, parent.getData(), 0, data.length);
+        bufferLock().unlock();
     }
 
     @Override
-    public MapGraphics<ClientsideMap, Void> copy() {
+    public MapGraphics<ClientsideMap> copy() {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public byte[] getDirectAccessData() {
+    public synchronized byte[] getDirectAccessData() {
         //return this.data;
         return null;
     }

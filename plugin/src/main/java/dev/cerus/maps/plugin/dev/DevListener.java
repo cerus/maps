@@ -34,12 +34,9 @@ public class DevListener implements Listener {
                 new TextComponent(event.getClickPos().x + ", " + event.getClickPos().y)
         );
         screen.addMarker(marker);
-        screen.sendMarkers(event.getPlayer());
         this.plugin.getServer().getScheduler().runTaskLater(this.plugin, () -> {
             screen.removeMarker(marker);
-            screen.sendMarkers(event.getPlayer());
         }, 5 * 20);
-        screen.sendMarkers(event.getPlayer());
         event.setCancelled(true);
     }
 

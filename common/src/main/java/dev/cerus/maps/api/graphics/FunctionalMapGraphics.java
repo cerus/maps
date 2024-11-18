@@ -4,7 +4,7 @@ import dev.cerus.maps.util.Vec2;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public class FunctionalMapGraphics<G extends MapGraphics<?, ?>> {
+public class FunctionalMapGraphics<G extends MapGraphics<?>> {
 
     private final G backing;
 
@@ -12,11 +12,11 @@ public class FunctionalMapGraphics<G extends MapGraphics<?, ?>> {
         this.backing = backing;
     }
 
-    public static <T extends MapGraphics<?, ?>> FunctionalMapGraphics<T> backedBy(final T backedBy) {
+    public static <T extends MapGraphics<?>> FunctionalMapGraphics<T> backedBy(final T backedBy) {
         return new FunctionalMapGraphics<>(backedBy);
     }
 
-    public static FunctionalMapGraphics<MapGraphics<MapGraphics<?, ?>, Vec2>> standalone(final int w, final int h) {
+    public static FunctionalMapGraphics<MapGraphics<MapGraphics<?>>> standalone(final int w, final int h) {
         return new FunctionalMapGraphics<>(new StandaloneMapGraphics(w, h));
     }
 

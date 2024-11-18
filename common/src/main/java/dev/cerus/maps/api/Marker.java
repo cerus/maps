@@ -21,15 +21,15 @@ public class Marker {
     private BaseComponent[] caption;
     private ClientsideMap parent;
 
-    public Marker(final int x, final int y, final byte direction, final byte type, final boolean visible) {
+    public Marker(int x, int y, byte direction, byte type, boolean visible) {
         this(x, y, direction, type, visible, new BaseComponent[0]);
     }
 
-    public Marker(final int x, final int y, final byte direction, final MapCursor.Type type, final boolean visible) {
+    public Marker(int x, int y, byte direction, MapCursor.Type type, boolean visible) {
         this(x, y, direction, type, visible, new BaseComponent[0]);
     }
 
-    public Marker(final int x, final int y, final byte direction, final byte type, final boolean visible, final BaseComponent... caption) {
+    public Marker(int x, int y, byte direction, byte type, boolean visible, BaseComponent... caption) {
         this.x = x;
         this.y = y;
         this.setDirection(direction);
@@ -38,7 +38,7 @@ public class Marker {
         this.caption = caption;
     }
 
-    public Marker(final int x, final int y, final byte direction, final MapCursor.Type type, final boolean visible, final BaseComponent... caption) {
+    public Marker(int x, int y, byte direction, MapCursor.Type type, boolean visible, BaseComponent... caption) {
         this.x = x;
         this.y = y;
         this.setDirection(direction);
@@ -47,7 +47,7 @@ public class Marker {
         this.caption = caption;
     }
 
-    public void setRawType(final byte type) {
+    public void setRawType(byte type) {
         if (type < 0 || type > 26) {
             throw new IllegalArgumentException("Type must be in the range 0-26");
         }
@@ -61,7 +61,7 @@ public class Marker {
         return this.x;
     }
 
-    public void setX(final int x) {
+    public void setX(int x) {
         this.x = x;
         if (this.parent != null) {
             this.parent.setDirtyMarkers(true);
@@ -77,7 +77,7 @@ public class Marker {
         return this.y;
     }
 
-    public void setY(final int y) {
+    public void setY(int y) {
         this.y = y;
         if (this.parent != null) {
             this.parent.setDirtyMarkers(true);
@@ -93,7 +93,7 @@ public class Marker {
         return this.direction;
     }
 
-    public void setDirection(final byte direction) {
+    public void setDirection(byte direction) {
         if (direction < 0 || direction > 15) {
             throw new IllegalArgumentException("Direction must be in the range 0-15");
         }
@@ -107,11 +107,11 @@ public class Marker {
         return this.type;
     }
 
-    public void setType(final MapCursor.Type type) {
+    public void setType(MapCursor.Type type) {
         this.setRawType(type.getValue());
     }
 
-    public void setType(final byte type) {
+    public void setType(byte type) {
         this.type = type;
         if (this.parent != null) {
             this.parent.setDirtyMarkers(true);
@@ -122,7 +122,7 @@ public class Marker {
         return this.visible;
     }
 
-    public void setVisible(final boolean visible) {
+    public void setVisible(boolean visible) {
         this.visible = visible;
         if (this.parent != null) {
             this.parent.setDirtyMarkers(true);
@@ -137,7 +137,7 @@ public class Marker {
         return this.caption;
     }
 
-    public void setCaption(final BaseComponent[] caption) {
+    public void setCaption(BaseComponent[] caption) {
         this.caption = caption;
         if (this.parent != null) {
             this.parent.setDirtyMarkers(true);
@@ -148,19 +148,19 @@ public class Marker {
         return ComponentSerializer.toString(this.caption);
     }
 
-    void setParent(final ClientsideMap parent) {
+    void setParent(ClientsideMap parent) {
         this.parent = parent;
     }
 
     @Override
-    public boolean equals(final Object o) {
+    public boolean equals(Object o) {
         if (this == o) {
             return true;
         }
         if (o == null || this.getClass() != o.getClass()) {
             return false;
         }
-        final Marker marker = (Marker) o;
+        Marker marker = (Marker) o;
         return this.getX() == marker.getX() && this.getY() == marker.getY() && this.getDirection() == marker.getDirection()
                 && this.getType() == marker.getType() && this.isVisible() == marker.isVisible() && Arrays.equals(this.getCaption(), marker.getCaption());
     }

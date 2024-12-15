@@ -31,7 +31,7 @@ of <a href="https://github.com/cerus/packet-maps">packet-maps</a>.</p>
 • Advanced engine features
 like [alpha compositing](https://en.wikipedia.org/wiki/Alpha_compositing) ([Image](https://cerus.dev/img/maps_alpha_composition.png))\
 • Efficient click handling\
-• Supports 1.16.5 - 1.21.1
+• Supports 1.16.5 - 1.21.4
 
 **What is the point of the plugin module?**\
 See [FAQ](#FAQ)

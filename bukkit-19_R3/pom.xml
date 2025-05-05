@@ -6,7 +6,7 @@
     <parent>
         <groupId>dev.cerus.maps</groupId>
         <artifactId>parent</artifactId>
-        <version>3.8.9</version>
+        <version>3.8.10</version>
     </parent>
 
     <artifactId>bukkit-19_R3</artifactId>

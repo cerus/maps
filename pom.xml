@@ -7,7 +7,7 @@
     <groupId>dev.cerus.maps</groupId>
     <artifactId>parent</artifactId>
     <packaging>pom</packaging>
-    <version>3.8.10</version>
+    <version>3.8.11</version>
     <modules>
         <module>common</module>
         <module>bukkit-16_R3</module>
@@ -25,6 +25,7 @@
         <module>bukkit-21_R2</module>
         <module>bukkit-21_R3</module>
         <module>bukkit-21_R4</module>
+        <module>bukkit-21_R5</module>
         <module>plugin</module>
     </modules>
 
@@ -60,16 +61,16 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
-    <distributionManagement>
+<!--    <distributionManagement>
         <snapshotRepository>
             <id>ossrh</id>
             <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
         </snapshotRepository>
-    </distributionManagement>
+    </distributionManagement>-->
 
     <build>
         <plugins>
-            <plugin>
+<!--            <plugin>
                 <groupId>org.sonatype.plugins</groupId>
                 <artifactId>nexus-staging-maven-plugin</artifactId>
                 <version>1.6.14</version>
@@ -78,6 +79,15 @@
                     <serverId>ossrh</serverId>
                     <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
                     <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                </configuration>
+            </plugin>-->
+            <plugin>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+                <version>0.8.0</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <publishingServerId>central</publishingServerId>
                 </configuration>
             </plugin>
             <plugin>

@@ -10,7 +10,7 @@
     </parent>
 
     <name>${parent.artifactId}</name>
-    <artifactId>bukkit-21_R1</artifactId>
+    <artifactId>bukkit-21_R5</artifactId>
 
     <properties>
         <maven.compiler.source>16</maven.compiler.source>
@@ -28,7 +28,7 @@
         <dependency>
             <groupId>org.bukkit</groupId>
             <artifactId>craftbukkit</artifactId>
-            <version>1.21-R0.1-SNAPSHOT</version>
+            <version>1.21.7-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

@@ -6,7 +6,7 @@
     <parent>
         <groupId>dev.cerus.maps</groupId>
         <artifactId>parent</artifactId>
-        <version>3.8.12</version>
+        <version>3.8.13</version>
     </parent>
 
     <name>${parent.artifactId}</name>

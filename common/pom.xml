@@ -5,13 +5,38 @@
     <parent>
         <artifactId>parent</artifactId>
         <groupId>dev.cerus.maps</groupId>
-        <version>3.8.13</version>
+        <version>3.8.14</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <name>${parent.artifactId}</name>
     <artifactId>common</artifactId>
-    <version>${parent.version}</version>
+    <version>3.8.14</version>
+
+    <description>maps is a simple Spigot plugin and api for creating clientside maps and map screens.</description>
+    <url>https://github.com/cerus/maps</url>
+
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>https://opensource.org/licenses/MIT</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <id>cerus</id>
+            <name>Maximilian Dorn</name>
+            <email>business@cerus.dev</email>
+            <url>https://cerus.dev</url>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:git://github.com/cerus/maps.git</connection>
+        <developerConnection>scm:git:ssh://github.com:cerus/maps.git</developerConnection>
+        <url>http://github.com/cerus/maps/tree/main</url>
+    </scm>
 
     <properties>
         <maven.compiler.target>16</maven.compiler.target>
@@ -30,7 +55,7 @@
         <dependency>
             <groupId>org.spigotmc</groupId>
             <artifactId>spigot-api</artifactId>
-            <version>1.16.5-R0.1-SNAPSHOT</version>
+            <version>1.16.5-R0.1-20210611.041013-99</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

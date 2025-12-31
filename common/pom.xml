@@ -5,13 +5,13 @@
     <parent>
         <artifactId>parent</artifactId>
         <groupId>dev.cerus.maps</groupId>
-        <version>3.8.14</version>
+        <version>3.8.15</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <name>${parent.artifactId}</name>
     <artifactId>common</artifactId>
-    <version>3.8.14</version>
+    <version>3.8.15</version>
 
     <description>maps is a simple Spigot plugin and api for creating clientside maps and map screens.</description>
     <url>https://github.com/cerus/maps</url>

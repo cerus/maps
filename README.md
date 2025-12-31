@@ -44,13 +44,16 @@ See [FAQ](#FAQ)
 
 **Maven setup**
 
+> [!WARNING]  
+> I'm unable to deploy the latest version to Maven Central at this time. There have been zero changes to the api, so you can still use the old version (3.8.12) until I've found a fix.
+
 ```xml
 
 <dependencies>
     <dependency>
         <groupId>dev.cerus.maps</groupId>
         <artifactId>common</artifactId>
-        <version>3.8.15</version>
+        <version>3.8.12</version>
         <scope>provided</scope> <!-- "provided" if the maps plugin is on the server, "compile" if not -->
     </dependency>
 
@@ -59,7 +62,7 @@ See [FAQ](#FAQ)
     <dependency>
         <groupId>dev.cerus.maps</groupId>
         <artifactId>plugin</artifactId>
-        <version>3.8.15</version>
+        <version>3.8.12</version>
         <scope>provided</scope>
     </dependency>
 </dependencies>
